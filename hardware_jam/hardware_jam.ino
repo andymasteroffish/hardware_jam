@@ -8,7 +8,7 @@ struct Button{
 
 #define NEO_PIXEL_START_PIN 6
 
-#define NUM_COLS 5
+#define NUM_COLS 90
 #define NUM_ROWS 2
 
 int num_pixels = NUM_COLS * NUM_ROWS;
@@ -19,7 +19,7 @@ Adafruit_NeoPixel pixel_rows0 = Adafruit_NeoPixel(NUM_COLS, NEO_PIXEL_START_PIN,
 Adafruit_NeoPixel pixel_rows1 = Adafruit_NeoPixel(NUM_COLS, NEO_PIXEL_START_PIN+1, NEO_GRB + NEO_KHZ800);
 
 //buttons
-int debounce_time = 50; //millis
+int debounce_time = 30; //millis
 Button test_button;
 
 
@@ -115,12 +115,12 @@ void display_game(){
   for (int x=0; x<NUM_COLS; x++){
     for (int y=0; y<NUM_ROWS; y++){
 
-      int col_r = 20;
+      int col_r = 10;
       int col_g = 0;
       int col_b = 0;
 
       if (player_x == x && player_y == y){
-        col_g = 55;
+        col_g = 25;
       }
 
        pixel_rows[y].setPixelColor(x, col_r,col_g,col_b);
