@@ -8,7 +8,7 @@ int val;        // Data received from the serial port
 int cols = 90;
 int rows = 2;
 char[][] grid = new char[cols][rows];
-
+char[][] last_sent_grid = new char[cols][rows];
 
 
 int box_size = 10;
@@ -42,9 +42,10 @@ void setup()
 void draw() {
   background(255);
   
+  
   //read from serial
   if ( myPort.available() > 0) {  // If data is available,
-    println(myPort.read());         
+    println("got:"+myPort.read());         
   }
   
   //draw the grid
@@ -64,26 +65,33 @@ void draw() {
   
 }
 
+
+
 void send_pixels(){
-  String line = "";
+  //get the difference betwene current grid and last sent grid
   for (int y=0; y<rows; y++){
     for (int x=0; x<cols; x++){
-      line += grid[x][y];
+      if (grid[x][y] != last_sent_grid[x][y]){
+        String line =x + "," + y + "," + grid[x][y]+"\n";
+        println("send:"+line);
+        myPort.write(line);
+      }
     }
   }
-  line += '\n';
   
-  myPort.write(line);
+  //store the current grid for comparison
+  for (int y=0; y<rows; y++){
+    for (int x=0; x<cols; x++){
+      last_sent_grid[x][y] = grid[x][y];
+    }
+  }
 }
 
 void keyPressed(){
- // println("sending");
-  //myPort.write("---r-g----");
-  //myPort.write('\n');
-  
   
 }
 
+//using the mouse to modify the testing grid
 void mousePressed(){
   int x = mouseX/box_size; 
   int y = mouseY/box_size; 
@@ -98,30 +106,3 @@ void mousePressed(){
   
   println(x+" "+y);
 }
-
-
-/*
-  // Wiring/Arduino code:
- // Read data from the serial and turn ON or OFF a light depending on the value
- 
- char val; // Data received from the serial port
- int ledPin = 4; // Set the pin to digital I/O 4
- 
- void setup() {
- pinMode(ledPin, OUTPUT); // Set pin as OUTPUT
- Serial.begin(9600); // Start serial communication at 9600 bps
- }
- 
- void loop() {
- while (Serial.available()) { // If data is available to read,
- val = Serial.read(); // read it and store it in val
- }
- if (val == 'H') { // If H was received
- digitalWrite(ledPin, HIGH); // turn the LED on
- } else {
- digitalWrite(ledPin, LOW); // Otherwise turn it OFF
- }
- delay(100); // Wait 100 milliseconds for next reading
- }
- 
- */

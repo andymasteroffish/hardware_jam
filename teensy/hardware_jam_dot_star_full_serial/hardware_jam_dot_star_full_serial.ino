@@ -4,7 +4,7 @@
 struct Button{
   int pin;
   int next_check_time;  //for debounce
-  bool is_held;
+  bool is_on;
 };
 
 #define DOT_STAR_START_PIN 4
@@ -12,12 +12,15 @@ struct Button{
 #define NUM_COLS 90
 #define NUM_ROWS 2
 
+int num_pixels = NUM_COLS * NUM_ROWS;
+
+
 //this is ugly, but putting them in an array from the start keeps failing
 Adafruit_DotStar pixel_rows0 = Adafruit_DotStar(NUM_COLS, DOT_STAR_START_PIN+0, DOT_STAR_START_PIN+1, DOTSTAR_BRG);
 Adafruit_DotStar pixel_rows1 = Adafruit_DotStar(NUM_COLS, DOT_STAR_START_PIN+2, DOT_STAR_START_PIN+3, DOTSTAR_BRG);
 
 //getting serial
-char buff[256];
+char buff[512];
 int buff_pos = 0;
 
 //buttons
@@ -53,7 +56,7 @@ void setup() {
   
   for (int i=0; i<NUM_BUTTONS; i++){
     buttons[i].next_check_time = 0;
-    buttons[i].is_held = false;
+    buttons[i].is_on = false;
     pinMode(buttons[i].pin, INPUT_PULLUP);
   }
 
@@ -61,29 +64,29 @@ void setup() {
 
 }
 
-
-
 void loop() {
 
   //chekcing serial
   while (Serial.available() > 0) {
     buff[buff_pos] = Serial.read();
 
-    //incoming messages are in this format "x,y,char\n"
-    //you need the new line char for it to count
-    if (buff[buff_pos] == '\n') {
-      int led_x, led_y;
-      char led_col;
-      sscanf(buff, "%d,%d,%c", &led_x, &led_y, &led_col);
-      
-      set_pixel(led_x, led_y, led_col);
+    //Serial.println(buff[buff_pos]);
 
-      //Serial.write("hi");
+    if (buff[buff_pos] == '\n') {
+      //Serial.println("done");
+      String line = "";
+      for (int c=0; c<buff_pos; c++){
+        line += buff[c];
+      }
       
+      
+      display_from_string(line);
       buff_pos = 0;
     } else {
       buff_pos++;
     }
+
+    Serial.write("hi");
   }
 
 
@@ -117,8 +120,6 @@ void loop() {
 
   //showing the thing
   //display_game();
-  pixel_rows0.show();
-  pixel_rows1.show(); 
 
 }
 
@@ -133,11 +134,11 @@ void check_input(){
       }
   
       //is that different form the current value?
-      if (cur_val != buttons[i].is_held){
-        buttons[i].is_held = cur_val;
+      if (cur_val != buttons[i].is_on){
+        buttons[i].is_on = cur_val;
         buttons[i].next_check_time = millis() + debounce_time;
-        Serial.println("button: "+String(buttons[i].is_held));
-        if (buttons[i].is_held){
+        Serial.println("button: "+String(buttons[i].is_on));
+        if (buttons[i].is_on){
           if (i==0){
             player_x++;
             if (player_x >= NUM_COLS) player_x = 0;
@@ -177,21 +178,9 @@ void display_from_string(String line){
   }
 
   pixel_rows0.show();
-  pixel_rows1.show(); 
-}
-
-//sets an individual pixel value but does not update the strand. call show() to do that
-void set_pixel(int x, int y, char col_char){
-    uint32_t color = 0x111111;
-
-    if (col_char == 'r') color = 0x440000;
-    if (col_char == 'g') color = 0x004400;
-    if (col_char == 'b') color = 0x000044;
+  pixel_rows1.show();
   
-    if (y==0) pixel_rows0.setPixelColor(x, color);
-    if (y==1) pixel_rows1.setPixelColor(x, color);
 }
-
 
 //JUST FOR TESTING
 void display_game(){
