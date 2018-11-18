@@ -2,9 +2,10 @@ struct Button{
   int pin;
   int next_check_time;  //for debounce
   bool is_held;
+  char key;
 };
 
-#define NUM_BUTTONS 1
+#define NUM_BUTTONS 2
 Button buttons[NUM_BUTTONS];
 
 int debounce_time = 30; //millis
@@ -12,6 +13,11 @@ int debounce_time = 30; //millis
 void setup() {
 
   buttons[0].pin = 2;
+  buttons[0].key = 'a';
+
+  buttons[1].pin = 3;
+  buttons[1].key = 'b';
+  
   for (int i=0; i<NUM_BUTTONS; i++){
     buttons[i].next_check_time = 0;
     buttons[i].is_held = false;
@@ -36,9 +42,7 @@ void loop() {
         buttons[i].next_check_time = millis() + debounce_time;
         Serial.println("button: "+String(buttons[i].is_held));
         if (buttons[i].is_held){
-          Keyboard.press(KEY_A);
-        }else{
-          Keyboard.release(KEY_A);
+          Keyboard.print(buttons[i].key);
         }
       }
       
