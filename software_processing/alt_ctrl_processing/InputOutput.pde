@@ -1,27 +1,34 @@
 
 void checkInput() {
+
+  if (useSerial) {
+
+    //read from serial
+    if ( myPort.available() > 0) {  // If data is available,
+      println("got:"+myPort.read());
+    }
+  }
+
   //check input
   if (keyPressed) {
-    
-    for (int i = 0; i < numSides; i++){
-      if (key == Integer.toString(i).charAt(0)){ //convert each side into a char
-        
+
+    for (int i = 0; i < numSides; i++) {
+      if (key == Integer.toString(i).charAt(0)) { //convert each side into a char
+
         action[i] = true;
         if (action[i] != pAction[i]) { //newly pressed
           startY[i]++;
           if (startY[i] > rows - 1) startY[i] = 0;
           updateSide(i);
-          
         }
       } else {
-       action[i] = false; 
+        action[i] = false;
       }
-      
     }
   } else {
-    for (int i = 0; i < numSides; i++)      action[i] = false; 
+    for (int i = 0; i < numSides; i++)      action[i] = false;
   }
-    
+
 
   updateActionRecord();
 }
@@ -72,9 +79,8 @@ void output() {
     pixelPlay[i] = pixel[i].clone();
   //pixelPlay[0][3] = 'z';
 
-  //idk why this is affecting the original array
   for (int i = 0; i < numPlayers; i++) {
-    pixelPlay[playerY[i]][(int)playerX[i]] = Integer.toString(i).charAt(0);
+    pixelPlay[playerY[i]][(int)playerX[i]] = Integer.toString(i + 1).charAt(0);
     // println(pixelPlay[playerY[i]][(int)playerX[i]] + " old: " + pixel[playerY[i]][(int)playerX[i]]);
   }
   String output = "";
@@ -85,9 +91,32 @@ void output() {
 
       rowContents[y] += pixelPlay[y][x];
     }
-    //println(rowContents[y]);
+    println(rowContents[y]);
     output += rowContents;
   }
-  //println();
+  println();
   //println(output);
+  
+  
+  
+  //get the difference betwene current grid and last sent grid
+  for (int y=0; y<rows; y++) {
+    for (int x=0; x<cols; x++) {
+      if (pixelPlay[y][x] != last_sent_grid[x][y]) {
+        String line =x + "," + y + "," + pixelPlay[y][x]+"\n";
+        //println("send:"+line);
+
+        if (useSerial) {
+          myPort.write(line);
+        }
+      }
+    }
+  }
+
+  //store the current grid for comparison
+  for (int y=0; y<rows; y++) {
+    for (int x=0; x<cols; x++) {
+      last_sent_grid[x][y] = pixelPlay[y][x];
+    }
+  }
 }

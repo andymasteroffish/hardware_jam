@@ -1,8 +1,13 @@
 
+import processing.serial.*;
 
-int cols = 88;
+Serial myPort;  // Create object from Serial class
+int val;        // Data received from the serial port
+boolean useSerial = false;
+
+int cols = 88; //should be divisible by 8
 int rows = 5;
-int numPlayers = 2; //up to 5 players? mebbes?
+int numPlayers = 3; //up to 5 players? mebbes?
 int numSides = 8;
 float startSpeed = 0.5;
 float speedMult = 1.5;
@@ -17,6 +22,8 @@ int[] startY = new int[numSides];
 int[] sideAction = new int[numSides]; //actions: 0 = blockToggle; 1 = shifter (true = up position, false = down position?); 2 = accelerator/decelerator? 3 = reversal?
 
 char[][] pixel = new char[rows][cols];
+char[][] last_sent_grid = new char[cols][rows]; //reversed because i did y/x made more sense to me for some odd reason
+
 int pixelScale = 1;
 float[] playerX = new float[numPlayers];
 int[] playerY = new int[numPlayers];
@@ -27,9 +34,26 @@ color[] playerColor = new color[numPlayers];
 
 
 
+
 void setup() {
   size(3800, 500);
-  println("blockh = " + blockH);
+  if (useSerial) {
+    for (int i=0; i<Serial.list().length; i++) {
+      println(i+":"+Serial.list()[i]);
+    }
+
+    println("try to connect");
+
+    // I know that the first port in the serial list on my mac
+    // is always my  FTDI adaptor, so I open Serial.list()[0].
+    // On Windows machines, this generally opens COM1.
+    // Open whatever port is the one you're using.
+    String portName = Serial.list()[0];
+    myPort = new Serial(this, portName, 9600);
+
+    println("done serial setup");
+  }
+
   pixelScale = width / cols;
 
   //default states

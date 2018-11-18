@@ -47,16 +47,16 @@ void shiftPlayer(int player) {
   int shiftAmt = shiftH - 1;
   int bottomY = startY[side] + (shiftAmt);
   if (bottomY > rows - 1) bottomY -= rows; //adjust for when it recovers at the top
-  println("bottomY " + side + ": " + bottomY);
+  //println("bottomY " + side + ": " + bottomY);
 
   //hit the top one
   if (playerY[player] == startY[side]) {
-    println("hit the down shifter");
+    //println("hit the down shifter");
     if (playerY[player] + shiftAmt > rows - 1) shiftAmt -= rows;
     playerY[player] += shiftAmt;
   } else if (playerY[player] == bottomY) {
     //hit the bottom one
-    println("hit the up shifter");
+    //println("hit the up shifter");
     if (playerY[player] - shiftAmt < 0) shiftAmt -= rows;
     playerY[player] -= shiftAmt;
   }
