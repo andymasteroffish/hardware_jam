@@ -1,5 +1,5 @@
 # hardware_jam
-DBAA Hardware Jam with Juno McClure
+DBAA Hardware Jam with Juno Morrow
 
 Using Teensy LC and Adafruit neopixels
 
