@@ -1,22 +1,12 @@
 
 void checkInput() {
 
-  if (useSerial) {
-
-    //read from serial
-    if ( myPort.available() > 0) {  // If data is available,
-      println("got:"+myPort.read());
-    }
-  }
-
-  //check input
-  if (keyPressed) {
-
     for (int i = 0; i < numSides; i++) {
-      if (key == Integer.toString(i).charAt(0)) { //convert each side into a char
+      if (key == (Integer.toString(i).charAt(0))) { //convert each side into a char
 
         action[i] = true;
         if (action[i] != pAction[i]) { //newly pressed
+          //println("new key= " + key);
           startY[i]++;
           if (startY[i] > rows - 1) startY[i] = 0;
           updateSide(i);
@@ -25,50 +15,39 @@ void checkInput() {
         action[i] = false;
       }
     }
-  } else {
-    for (int i = 0; i < numSides; i++)      action[i] = false;
-  }
-
-
+    
   updateActionRecord();
 }
-void keyPressed() {
-  if (gameOver) {
-    gameOver = false;
-   setup(); 
-  }
-  /*
-//the desktop version which can be called only upon keypress
-   switch(key) { //hardcoded for now
-   case '0':
-   action[0] = !action[0];
-   break;
-   case '1':
-   action[1] = !action[1];
-   break;
-   case '2':
-   action[2] = !action[2];
-   break;
-   case '3':
-   action[3] = !action[3];
-   break;
-   case '4':
-   action[4] = !action[4];
-   break;
-   case '5':
-   action[5] = !action[5];
-   break;
-   case '6':
-   action[6] = !action[6];
-   break;
-   case '7':
-   action[7] = !action[7];
-   break;
-   }
-   //updateSides(); //update block positions
-   //println(action);
-   */
+
+void keyReleased() {
+  
+  //println("key " + key + " released");
+  
+    for (int i = 0; i < numSides; i++) {
+      if (key == (Integer.toString(i).charAt(0))) { //convert each side into a char
+
+        action[i] = false;
+        if (action[i] != pAction[i]) { //newly pressed
+          //startY[i]++;
+          //if (startY[i] > rows - 1) startY[i] = 0;
+         // updateSide(i);
+        }
+      }
+    }
+    
+  updateActionRecord();
+    
 }
+void keyPressed() {
+  if (!gameBegun) {
+    gameBegun = true;
+    resetMatrix();
+  }
+  if (gameOver) setup(); 
+  
+  checkInput();
+}
+
 void updateActionRecord() {
   for (int i = 0; i < numSides; i++)
     pAction[i] = action[i];

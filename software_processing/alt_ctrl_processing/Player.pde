@@ -2,7 +2,8 @@
 void runPlayers() {
   
    winner = checkWinners(); //winner remains -1 if no winner
-   if (winner != -1) displayWinner(winner);
+   if (winner != -1) gameOver = true;
+     
 
   //override those values with player
   for (int i = 0; i < numPlayers; i++) {
@@ -95,12 +96,16 @@ int checkWinners() { //returns winner index if won
 }
 
 void displayWinner(int player) {
-  println("PLAYER " + player + " WON!!!");
-  for (int i = 0; i < rows; i++) {
-    for (int j = 0; j < cols; j++) {
-      pixel[i][j] = Integer.toString(player).charAt(0);
+  int mod = frameCount % cols;
+  println("PLAYER " + player + " WON!!!" + " mod=" + mod);
+  for (int y = 0; y < rows; y++) {
+    for (int x = 0; x < cols; x++) {
+      int loc = x + y * cols;
+      pixel[y][x] = Integer.toString(player).charAt(0);
+      if (loc % cols == mod) pixel[y][x] = 'a';
+      //pixel[i][j] = Integer.toString(player).charAt(0);
+      
     }
   }
-  //fill(playerColor[player]);
   gameOver = true;
 }

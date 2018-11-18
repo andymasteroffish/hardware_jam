@@ -5,14 +5,15 @@ Serial myPort;  // Create object from Serial class
 int val;        // Data received from the serial port
 boolean useSerial = false;
 
-int cols = 88; //should be divisible by 8
+int cols = 83; //should be divisible by 8
 int rows = 5;
-int numPlayers = 3; //up to 5 players? mebbes?
+int numPlayers = 2; //up to 5 players? mebbes?
 int numSides = 8;
 float startSpeed = 0.5;
 float speedMult = 1.5;
 int winner = -1;
-boolean gameOver = true;
+boolean gameOver = false;
+boolean gameBegun = false;
 
 int blockH = int((2.0/3.0) * rows);
 int shiftH = 5;
@@ -38,7 +39,7 @@ color[] playerColor = new color[numPlayers];
 
 
 void setup() {
-  size(3800, 500);
+  size(3000, 300);
   if (useSerial) {
     for (int i=0; i<Serial.list().length; i++) {
       println(i+":"+Serial.list()[i]);
@@ -55,16 +56,16 @@ void setup() {
 
     println("done serial setup");
   }
+  
+    gameOver = false;
+    gameBegun = false;
+    winner = -1;
 
   pixelScale = width / cols;
 
   //default states
-  for (int i = 0; i < rows; i++) {
-    for (int j = 0; j < cols; j++) {
-      pixel[i][j] = 'a';
-    }
-  }
-
+  resetMatrix(); 
+  
   for (int i = 0; i < numPlayers; i++) {
     playerX[i] = i; //separated so they dont overlap
     //playerY[i] = i * (rows - 1); //put on opposite side
@@ -87,7 +88,7 @@ void setup() {
   sideAction[4] = 2;
   sideAction[5] = 3;
   sideAction[6] = 1;
-  sideAction[7] = 0;
+  sideAction[7] = 2;
 
   updateSides(); //update interaction side elements
 }
@@ -99,15 +100,20 @@ void draw() {
   ellipseMode(CORNER);
 
   displayBoard(); //board before any players
-  checkInput(); //using keypressed in processing ... only run this if there is new input?
-  if (!gameOver) runPlayers();
-  //checkWinners();
+  
+  //checkInput(); //using keypressed in processing ... only run this if there is new input?
+  if (!gameBegun) displayIntro();
+  else if (!gameOver) runPlayers();
+  else displayWinner(winner);
   output();
+  
+  
 }
 
 
 
 void displayBoard() {
+  
 
   for (int y = 0; y < rows; y++) {
     for (int x = 0; x < cols; x++) {
@@ -134,7 +140,7 @@ void displayBoard() {
         fill(playerColor[1]);
         break;
       case '2': //PLAYER 2 WON
-        fill(playerColor[2]);
+        if (numPlayers >= 3) fill(playerColor[2]);
         break;
       }
 
@@ -150,4 +156,35 @@ void resetCol(int col) {
   for (int i = 0; i < rows; i++) {
     pixel[i][col] = 'a';
   }
+}
+
+
+void displayIntro() {
+  
+  int mod = (frameCount/3) % cols;
+  String abc = "abcde123";
+  println("mod=" + mod);
+  
+  for (int y = 0; y < rows; y++) {
+    for (int x = 0; x < cols; x++) {
+      int loc = x + mod + y * cols;
+      pixel[y][x] = abc.charAt(loc % abc.length());
+      //print(pixel[y][x]);
+      //if (loc % cols == mod) pixel[y][x] = 'a';
+      //pixel[i][j] = Integer.toString(player).charAt(0);
+      
+    }
+  }
+  
+}
+
+void resetMatrix(){
+  
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      pixel[i][j] = 'a';
+    }
+  }
+  updateSides();
+
 }
