@@ -1,14 +1,15 @@
 
-import java.util.Arrays;
 
 int cols = 88;
 int rows = 5;
-int numPlayers = 3; //up to 5 players? mebbes?
+int numPlayers = 2; //up to 5 players? mebbes?
 int numSides = 8;
 float startSpeed = 0.5;
+float speedMult = 1.1;
 
 int blockH = int((2.0/3.0) * rows);
-int shiftH = 3;
+int shiftH = 5;
+int accH = 1;
 int sideW = cols / numSides; //pixels per side
 boolean[] action = new boolean[numSides];
 boolean[] pAction = new boolean[numSides];
@@ -55,12 +56,12 @@ void setup() {
   //hard assigning the input actions
   sideAction[0] = 1;
   sideAction[1] = 1;
-  sideAction[2] = 1;
+  sideAction[2] = 2;
   sideAction[3] = 1;
-  sideAction[4] = 1;
-  sideAction[5] = 0;
+  sideAction[4] = 0;
+  sideAction[5] = 3;
   sideAction[6] = 1;
-  sideAction[7] = 1;
+  sideAction[7] = 3;
 
   updateSides(); //update interaction side elements
 }
@@ -93,6 +94,12 @@ void displayBoard() {
         break;
       case 'c': //shifter
         fill(0, 0, 255);
+        break;
+      case 'd': //accelerator
+        fill(0, 255, 0);
+        break;
+      case 'e': //reverseDir
+        fill(255, 0, 255);
         break;
       }
 

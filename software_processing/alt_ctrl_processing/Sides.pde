@@ -31,7 +31,7 @@ void updateSides() {
       break;
 
     case 2:
-      updateSpeeder(i);
+      updateAcc(i);
 
       break;
 
@@ -51,7 +51,7 @@ void updateSide(int side) {
     updateShifter(side);
     break;
   case 2:
-    updateSpeeder(side);
+    updateAcc(side);
     break;
   case 3:
     updateDir(side);
@@ -72,14 +72,6 @@ void updateBlock(int side) {
     int whichRow = j + startY[side];
     if (whichRow > rows - 1) whichRow -= rows;
     pixel[whichRow][col] = 'b';
-    /*
-    //assigning to fill out the blocks rows
-     if (action[side]) {
-     pixel[j][col] = 'b'; //top
-     } else {
-     pixel[j + rows/2][col] = 'b'; //bottom
-     }
-     */
   }
 }
 
@@ -91,14 +83,47 @@ void updateShifter(int side) {
 
   resetCol(col);
 
-  for (int i = 0; i < shiftH; i++) {
-    
-    int whichRow =i + startY[side];
+  //use this method to color the only the outside
+
+
+  int whichRow = startY[side]; //top
+  pixel[whichRow][col] = 'c';
+  whichRow += shiftH - 1; //bottom
+  if (whichRow > rows - 1) whichRow -= rows; //correct for overshoot
+  pixel[whichRow][col] = 'c';
+
+
+
+  /*
+//use this method to color the interior
+   for (int i = 0; i < shiftH; i++) {
+   
+   int whichRow =i + startY[side];
+   if (whichRow > rows - 1) whichRow -= rows;
+   pixel[whichRow][col] = 'c';
+   }
+   */
+}
+void updateAcc(int side) {
+  
+  int middleX = sideW / 2;
+  int col = side * sideW + middleX;
+
+
+  resetCol(col);
+  //draw out the col
+  for (int j = 0; j < accH; j++) {
+    int whichRow = j + startY[side];
     if (whichRow > rows - 1) whichRow -= rows;
-    pixel[whichRow][col] = 'c';
+    pixel[whichRow][col] = 'd';
   }
 }
-  void updateSpeeder(int side) {
-  }
-  void updateDir(int side) {
-  }
+void updateDir(int side) {
+  
+  int middleX = sideW / 2;
+  int col = side * sideW + middleX;
+  
+  resetCol(col);
+  pixel[startY[side]][col] = 'e';
+
+}

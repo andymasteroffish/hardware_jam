@@ -16,10 +16,14 @@ void runPlayers() {
       playerSpeed[i] = 0; //placeholder for end player movement/game?
       playerColor[i] = color(red(playerColor[i]), green(playerColor[i]), blue(playerColor[i]), 100);
       break;
-
     case 'c': //shift
       shiftPlayer(i);
-
+      break;
+    case 'd': //acc
+      accPlayer(i);
+      break;
+    case 'e': //reverse dir
+      reverseDir(i);
       break;
     }
 
@@ -27,9 +31,17 @@ void runPlayers() {
   }
 }
 void moveFwd(int player) {
-  if (playerX[player] < cols - 1)
-    playerX[player] += playerSpeed[player];
-  else playerX[player] = 0;
+  if (playerX[player] < cols - 1){
+    if (playerX[player] >= 0){
+      playerX[player] += playerSpeed[player];
+    } else {
+      playerX[player] = cols - 2; //went off the left
+    }
+  } else { //went off the right
+    playerX[player] = 0;
+  }
+  
+  
 }
 void shiftPlayer(int player) {
   int side = int((playerX[player] / cols) * numSides);
@@ -50,60 +62,16 @@ void shiftPlayer(int player) {
     if (playerY[player] - shiftAmt < 0) shiftAmt -= rows;
     playerY[player] -= shiftAmt;
   }
-  playerX[player]+= 1;
-
-/*
-  // println("checking " + side);
-  if (!action[side]) {
-    //println("move player " + player + " up");
-    playerY[player] += rows / 2; //false = move from middle to top
-  } else {
-    //println("move player " + player + " down");
-    playerY[player] -= rows / 2; //true = move from middle to bottom
-  }
-} else {
-
-  if (playerY[player] == 0) {
-
-    //println("move player " + player + " down");
-    playerY[player] += rows / 2; //move down from top
-  }
-  if (playerY[player] == rows - 1) {
-
-    // println("move player " + player + " up");
-    playerY[player] -= rows / 2; //move up from bottom
-  }
-}
-//moveFwd(player);
-playerX[player] += 1; //send a full position so it doesnt recheck it if speed is < 1
-*/
+  if (playerSpeed[player] > 0) playerX[player]+= 1;
+  else playerX[player] -= 1;
 }
 
-void oldShiftPlayer(int player) {
-  //println("rows/2 = " + rows/2);
-  if (playerY[player] == rows / 2) {
-    int side = int((playerX[player] / cols) * numSides);
-    // println("checking " + side);
-    if (!action[side]) {
-      //println("move player " + player + " up");
-      playerY[player] += rows / 2; //false = move from middle to top
-    } else {
-      //println("move player " + player + " down");
-      playerY[player] -= rows / 2; //true = move from middle to bottom
-    }
-  } else {
+void accPlayer(int player){
+ playerSpeed[player] *= speedMult;
+ moveFwd(player);
+}
 
-    if (playerY[player] == 0) {
-
-      //println("move player " + player + " down");
-      playerY[player] += rows / 2; //move down from top
-    }
-    if (playerY[player] == rows - 1) {
-
-      // println("move player " + player + " up");
-      playerY[player] -= rows / 2; //move up from bottom
-    }
-  }
-  //moveFwd(player);
-  playerX[player] += 1; //send a full position so it doesnt recheck it if speed is < 1
+void reverseDir(int player){
+ playerSpeed[player] *= -1;
+ playerX[player] += playerSpeed[player]; //to avoid getting stuck in a loop
 }
