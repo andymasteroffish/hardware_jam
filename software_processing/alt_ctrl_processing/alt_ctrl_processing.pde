@@ -11,6 +11,8 @@ int numPlayers = 3; //up to 5 players? mebbes?
 int numSides = 8;
 float startSpeed = 0.5;
 float speedMult = 1.5;
+int winner = -1;
+boolean gameOver = true;
 
 int blockH = int((2.0/3.0) * rows);
 int shiftH = 5;
@@ -81,11 +83,11 @@ void setup() {
   sideAction[0] = 1;
   sideAction[1] = 1;
   sideAction[2] = 2;
-  sideAction[3] = 1;
+  sideAction[3] = 0;
   sideAction[4] = 2;
   sideAction[5] = 3;
   sideAction[6] = 1;
-  sideAction[7] = 3;
+  sideAction[7] = 0;
 
   updateSides(); //update interaction side elements
 }
@@ -98,8 +100,8 @@ void draw() {
 
   displayBoard(); //board before any players
   checkInput(); //using keypressed in processing ... only run this if there is new input?
-
-  runPlayers();
+  if (!gameOver) runPlayers();
+  //checkWinners();
   output();
 }
 
@@ -124,6 +126,15 @@ void displayBoard() {
         break;
       case 'e': //reverseDir
         fill(255, 0, 255);
+        break;
+      case '0': //PLAYER 0 WON
+        fill(playerColor[0]);
+        break;
+      case '1': //PLAYER 1 WON
+        fill(playerColor[1]);
+        break;
+      case '2': //PLAYER 2 WON
+        fill(playerColor[2]);
         break;
       }
 

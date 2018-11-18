@@ -1,5 +1,8 @@
 
 void runPlayers() {
+  
+   winner = checkWinners(); //winner remains -1 if no winner
+   if (winner != -1) displayWinner(winner);
 
   //override those values with player
   for (int i = 0; i < numPlayers; i++) {
@@ -27,6 +30,7 @@ void runPlayers() {
       reverseDir(i);
       break;
     }
+
 
     ellipse(playerX[i] * pixelScale, playerY[i] * pixelScale, pixelScale, pixelScale);
   }
@@ -72,4 +76,31 @@ void accPlayer(int player) {
 void reverseDir(int player) {
   playerSpeed[player] *= -1;
   playerX[player] += playerSpeed[player]; //to avoid getting stuck in a loop
+}
+
+int checkWinners() { //returns winner index if won
+  int winPlayer = -1;
+  int playersAlive = 0;
+  for (int i = 0; i < numPlayers; i++) {
+    if (playerSpeed[i] != 0) {
+      playersAlive++;
+      winPlayer = i;
+    }
+  }
+  if (playersAlive == 1) {
+    println("winner found (player " + winPlayer);
+    return winPlayer;
+  }
+  else return -1;
+}
+
+void displayWinner(int player) {
+  println("PLAYER " + player + " WON!!!");
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      pixel[i][j] = Integer.toString(player).charAt(0);
+    }
+  }
+  //fill(playerColor[player]);
+  gameOver = true;
 }

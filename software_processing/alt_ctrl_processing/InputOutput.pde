@@ -33,6 +33,10 @@ void checkInput() {
   updateActionRecord();
 }
 void keyPressed() {
+  if (gameOver) {
+    gameOver = false;
+   setup(); 
+  }
   /*
 //the desktop version which can be called only upon keypress
    switch(key) { //hardcoded for now
@@ -91,10 +95,10 @@ void output() {
 
       rowContents[y] += pixelPlay[y][x];
     }
-    println(rowContents[y]);
+    //println(rowContents[y]);
     output += rowContents;
   }
-  println();
+  //println();
   //println(output);
   
   
