@@ -1,3 +1,9 @@
 For dot star, switch green and yellow form the example
 Green is data pin
-Yellow is clockpin
+Yellow is clock pin
+
+
+
+
+
+

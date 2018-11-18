@@ -19,7 +19,9 @@ int num_pixels = NUM_COLS * NUM_ROWS;
 Adafruit_DotStar pixel_rows0 = Adafruit_DotStar(NUM_COLS, DOT_STAR_START_PIN+0, DOT_STAR_START_PIN+1, DOTSTAR_BRG);
 Adafruit_DotStar pixel_rows1 = Adafruit_DotStar(NUM_COLS, DOT_STAR_START_PIN+2, DOT_STAR_START_PIN+3, DOTSTAR_BRG);
 
-
+//getting serial
+char buff[512];
+int buff_pos = 0;
 
 //buttons
 int debounce_time = 30; //millis
@@ -64,37 +66,60 @@ void setup() {
 
 void loop() {
 
+  //chekcing serial
+  while (Serial.available() > 0) {
+    buff[buff_pos] = Serial.read();
+
+    //Serial.println(buff[buff_pos]);
+
+    if (buff[buff_pos] == '\n') {
+      //Serial.println("done");
+      String line = "";
+      for (int c=0; c<buff_pos; c++){
+        line += buff[c];
+      }
+      
+      
+      display_from_string(line);
+      buff_pos = 0;
+    } else {
+      buff_pos++;
+    }
+
+    Serial.write("hi");
+  }
+
 
   //checking for serial test input
-  if (Serial.available() > 0) {
-    String incoming = Serial.readString();
-    Serial.println(incoming);
-    if (incoming[0] == 'w'){
-      player_y++;
-      if (player_y >= NUM_ROWS) player_y = 0;
-    }
-    if (incoming[0] == 's'){
-      player_y--;
-      if (player_y < 0) player_y = NUM_ROWS-1;
-    }
-    if (incoming[0] == 'd'){
-      player_x++;
-      if (player_x >= NUM_COLS) player_x = 0;
-    }
-    if (incoming[0] == 'a'){
-      player_x--;
-      if (player_x < 0) player_x = NUM_COLS-1;
-    }
-
-    Serial.println("player at "+String(player_x)+" , "+String(player_y));
-  
-  }
+//  if (Serial.available() > 0) {
+//    String incoming = Serial.readString();
+//    Serial.println(incoming);
+//    if (incoming[0] == 'w'){
+//      player_y++;
+//      if (player_y >= NUM_ROWS) player_y = 0;
+//    }
+//    if (incoming[0] == 's'){
+//      player_y--;
+//      if (player_y < 0) player_y = NUM_ROWS-1;
+//    }
+//    if (incoming[0] == 'd'){
+//      player_x++;
+//      if (player_x >= NUM_COLS) player_x = 0;
+//    }
+//    if (incoming[0] == 'a'){
+//      player_x--;
+//      if (player_x < 0) player_x = NUM_COLS-1;
+//    }
+//
+//    Serial.println("player at "+String(player_x)+" , "+String(player_y));
+//  
+//  }
 
   //checking button input
   check_input();
 
   //showing the thing
-  display_game();
+  //display_game();
 
 }
 
@@ -130,6 +155,34 @@ void check_input(){
   }
 }
 
+void display_from_string(String line){
+  for (int x=0; x<NUM_COLS; x++){
+    for (int y=0; y<NUM_ROWS; y++){
+
+      //int char_pos = ;
+
+      char this_char = line[x + y * NUM_COLS];
+
+      uint32_t color = 0x111111;
+
+      if (this_char == 'r') color = 0x440000;
+      if (this_char == 'g') color = 0x004400;
+      if (this_char == 'b') color = 0x000044;
+
+      if (y==0) pixel_rows0.setPixelColor(x, color);
+      if (y==1) pixel_rows1.setPixelColor(x, color);
+
+       //pixel_rows[y].setPixelColor(x, color);
+    
+    }
+  }
+
+  pixel_rows0.show();
+  pixel_rows1.show();
+  
+}
+
+//JUST FOR TESTING
 void display_game(){
   for (int x=0; x<NUM_COLS; x++){
     for (int y=0; y<NUM_ROWS; y++){
