@@ -41,22 +41,45 @@ void updateSides() {
     }
   }
 }
+void updateSide(int side) {
+
+  switch (sideAction[side]) {
+  case 0: //blocks
+    updateBlock(side);
+    break;
+  case 1:  
+    updateShifter(side);
+    break;
+  case 2:
+    updateSpeeder(side);
+    break;
+  case 3:
+    updateDir(side);
+    break;
+  }
+}
+
 
 void updateBlock(int side) {
 
-  int middle = sideW / 2;
-  int col = side * sideW + middle;
+  int middleX = sideW / 2;
+  int col = side * sideW + middleX;
 
 
   resetCol(col);
   //draw out the col
   for (int j = 0; j < blockH; j++) {
+    int whichRow = j + startY[side];
+    if (whichRow > rows - 1) whichRow -= rows;
+    pixel[whichRow][col] = 'b';
+    /*
     //assigning to fill out the blocks rows
-    if (action[side]) {
-      pixel[j][col] = 'b'; //up
-    } else {
-      pixel[j + rows/2][col] = 'b'; //down
-    }
+     if (action[side]) {
+     pixel[j][col] = 'b'; //top
+     } else {
+     pixel[j + rows/2][col] = 'b'; //bottom
+     }
+     */
   }
 }
 
@@ -67,18 +90,15 @@ void updateShifter(int side) {
   int col = side * sideW + middle;
 
   resetCol(col);
-  
-  pixel[rows / 2][col] = 'c'; //middle
-  if (action[side]) { //
-    pixel[0][col] = 'c'; //top
-  } else {
-    pixel[rows - 1][col] = 'c'; //bottom
+
+  for (int i = 0; i < shiftH; i++) {
+    
+    int whichRow =i + startY[side];
+    if (whichRow > rows - 1) whichRow -= rows;
+    pixel[whichRow][col] = 'c';
   }
- 
 }
-void updateSpeeder(int side) {
-  
-}
-void updateDir(int side) {
-  
-}
+  void updateSpeeder(int side) {
+  }
+  void updateDir(int side) {
+  }
