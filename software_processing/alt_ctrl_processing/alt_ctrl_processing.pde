@@ -5,7 +5,7 @@ int rows = 5;
 int numPlayers = 2; //up to 5 players? mebbes?
 int numSides = 8;
 float startSpeed = 0.5;
-float speedMult = 1.1;
+float speedMult = 1.5;
 
 int blockH = int((2.0/3.0) * rows);
 int shiftH = 5;
@@ -58,7 +58,7 @@ void setup() {
   sideAction[1] = 1;
   sideAction[2] = 2;
   sideAction[3] = 1;
-  sideAction[4] = 0;
+  sideAction[4] = 2;
   sideAction[5] = 3;
   sideAction[6] = 1;
   sideAction[7] = 3;

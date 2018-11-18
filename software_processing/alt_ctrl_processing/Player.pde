@@ -3,6 +3,7 @@ void runPlayers() {
 
   //override those values with player
   for (int i = 0; i < numPlayers; i++) {
+    playerSpeed[i] = constrain(playerSpeed[i], -0.99f, 0.99f); //prevent it from skipping things
     fill(playerColor[i]);
 
     char current = pixel[playerY[i]][(int)playerX[i]];
@@ -31,8 +32,8 @@ void runPlayers() {
   }
 }
 void moveFwd(int player) {
-  if (playerX[player] < cols - 1){
-    if (playerX[player] >= 0){
+  if (playerX[player] < cols - 1) {
+    if (playerX[player] >= 0) {
       playerX[player] += playerSpeed[player];
     } else {
       playerX[player] = cols - 2; //went off the left
@@ -40,8 +41,6 @@ void moveFwd(int player) {
   } else { //went off the right
     playerX[player] = 0;
   }
-  
-  
 }
 void shiftPlayer(int player) {
   int side = int((playerX[player] / cols) * numSides);
@@ -49,15 +48,14 @@ void shiftPlayer(int player) {
   int bottomY = startY[side] + (shiftAmt);
   if (bottomY > rows - 1) bottomY -= rows; //adjust for when it recovers at the top
   println("bottomY " + side + ": " + bottomY);
-  
+
   //hit the top one
   if (playerY[player] == startY[side]) {
     println("hit the down shifter");
     if (playerY[player] + shiftAmt > rows - 1) shiftAmt -= rows;
     playerY[player] += shiftAmt;
-  }
-  else if (playerY[player] == bottomY) {
-     //hit the bottom one
+  } else if (playerY[player] == bottomY) {
+    //hit the bottom one
     println("hit the up shifter");
     if (playerY[player] - shiftAmt < 0) shiftAmt -= rows;
     playerY[player] -= shiftAmt;
@@ -66,12 +64,12 @@ void shiftPlayer(int player) {
   else playerX[player] -= 1;
 }
 
-void accPlayer(int player){
- playerSpeed[player] *= speedMult;
- moveFwd(player);
+void accPlayer(int player) {
+  playerSpeed[player] *= speedMult;
+  moveFwd(player);
 }
 
-void reverseDir(int player){
- playerSpeed[player] *= -1;
- playerX[player] += playerSpeed[player]; //to avoid getting stuck in a loop
+void reverseDir(int player) {
+  playerSpeed[player] *= -1;
+  playerX[player] += playerSpeed[player]; //to avoid getting stuck in a loop
 }
