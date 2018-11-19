@@ -3,20 +3,20 @@ import processing.serial.*;
 
 Serial myPort;  // Create object from Serial class
 int val;        // Data received from the serial port
-boolean useSerial = false;
+boolean useSerial = true;
 
-int cols = 83; //should be divisible by 8
-int rows = 5;
+int cols = 85; //should be divisible by 8
+int rows = 3;
 int numPlayers = 2; //up to 5 players? mebbes?
 int numSides = 8;
-float startSpeed = 0.5;
+float startSpeed = 0.1;
 float speedMult = 1.5;
 int winner = -1;
 boolean gameOver = false;
 boolean gameBegun = false;
 
 int blockH = int((2.0/3.0) * rows);
-int shiftH = 5;
+int shiftH = 2;
 int accH = 1;
 int sideW = cols / numSides; //pixels per side
 boolean[] action = new boolean[numSides];
@@ -40,7 +40,7 @@ color[] playerColor = new color[numPlayers];
 
 void setup() {
   size(3000, 300);
-  if (useSerial) {
+  if (useSerial && !gameOver) {
     for (int i=0; i<Serial.list().length; i++) {
       println(i+":"+Serial.list()[i]);
     }
@@ -68,8 +68,8 @@ void setup() {
   
   for (int i = 0; i < numPlayers; i++) {
     playerX[i] = i; //separated so they dont overlap
-    //playerY[i] = i * (rows - 1); //put on opposite side
-    playerY[i] = i; //use its own lane
+    if (numPlayers == 2) playerY[i] = i * (rows - 1); //put on opposite side 
+    else playerY[i] = i; //use its own lane
     playerSpeed[i] = startSpeed;
 
     playerColor[i] = color(random(255), random(255), random(255));
