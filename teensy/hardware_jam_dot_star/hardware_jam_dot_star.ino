@@ -5,16 +5,22 @@ struct Button{
   int pin;
   int next_check_time;  //for debounce
   bool is_held;
+  char key;
 };
 
-#define DOT_STAR_START_PIN 4
 
-#define NUM_COLS 90
-#define NUM_ROWS 2
 
+#define NUM_COLS 85
+#define NUM_ROWS 3
+ 
 //this is ugly, but putting them in an array from the start keeps failing
-Adafruit_DotStar pixel_rows0 = Adafruit_DotStar(NUM_COLS, DOT_STAR_START_PIN+0, DOT_STAR_START_PIN+1, DOTSTAR_BRG);
-Adafruit_DotStar pixel_rows1 = Adafruit_DotStar(NUM_COLS, DOT_STAR_START_PIN+2, DOT_STAR_START_PIN+3, DOTSTAR_BRG);
+//data pin then clock pin
+//data is green, clock is yellow
+Adafruit_DotStar pixel_rows0 = Adafruit_DotStar(NUM_COLS, 4,5 , DOTSTAR_BRG);
+Adafruit_DotStar pixel_rows1 = Adafruit_DotStar(NUM_COLS, 6,7, DOTSTAR_BRG);
+Adafruit_DotStar pixel_rows2 = Adafruit_DotStar(NUM_COLS, 11, 12, DOTSTAR_BRG);
+Adafruit_DotStar pixel_rows3 = Adafruit_DotStar(NUM_COLS, 13, 14, DOTSTAR_BRG);
+Adafruit_DotStar pixel_rows4 = Adafruit_DotStar(NUM_COLS, 15, 16, DOTSTAR_BRG);
 
 //getting serial
 char buff[256];
@@ -22,7 +28,7 @@ int buff_pos = 0;
 
 //buttons
 int debounce_time = 30; //millis
-#define NUM_BUTTONS 2
+#define NUM_BUTTONS 8
 Button buttons[NUM_BUTTONS];
 
 
@@ -42,14 +48,45 @@ void setup() {
   
    pixel_rows0.begin();
    pixel_rows0.show();
-
+   
    pixel_rows1.begin();
    pixel_rows1.show();
+   
+   pixel_rows2.begin();
+   pixel_rows2.show();
+
+   pixel_rows3.begin();
+   pixel_rows3.show();
+
+   pixel_rows4.begin();
+   pixel_rows4.show();
   
 
   //buttons
-  buttons[0].pin = 2;
-  buttons[1].pin = 20;
+  buttons[0].pin = 0;
+  buttons[0].key = '0';
+  
+  buttons[1].pin = 1;
+  buttons[1].key = '1';
+
+  buttons[2].pin = 2;
+  buttons[2].key = '2';
+  
+  buttons[3].pin = 3;
+  buttons[3].key = '3';
+
+  buttons[4].pin = 17;
+  buttons[4].key = '4';
+
+  buttons[5].pin = 18;
+  buttons[5].key = '5';
+
+  buttons[6].pin = 19;
+  buttons[6].key = '6';
+
+  buttons[7].pin = 20;
+  buttons[7].key = '7';
+
   
   for (int i=0; i<NUM_BUTTONS; i++){
     buttons[i].next_check_time = 0;
@@ -65,7 +102,7 @@ void setup() {
 
 void loop() {
 
-  //chekcing serial
+  //checking serial
   while (Serial.available() > 0) {
     buff[buff_pos] = Serial.read();
 
@@ -119,6 +156,9 @@ void loop() {
   //display_game();
   pixel_rows0.show();
   pixel_rows1.show(); 
+  pixel_rows2.show(); 
+  pixel_rows3.show(); 
+  pixel_rows4.show(); 
 
 }
 
@@ -138,14 +178,7 @@ void check_input(){
         buttons[i].next_check_time = millis() + debounce_time;
         Serial.println("button: "+String(buttons[i].is_held));
         if (buttons[i].is_held){
-          if (i==0){
-            player_x++;
-            if (player_x >= NUM_COLS) player_x = 0;
-          }
-          if (i==1){
-            player_y++;
-            if (player_y >= NUM_ROWS) player_y = 0;
-          }
+          Keyboard.print(buttons[i].key);
         }
         
       }
@@ -154,6 +187,35 @@ void check_input(){
   }
 }
 
+
+//sets an individual pixel value but does not update the strand. call show() to do that
+void set_pixel(int x, int y, char col_char){
+    uint32_t color = 0x000000;  //'a'
+
+    if (col_char == 'b') color = 0x004400;  //blocked
+    if (col_char == 'c') color = 0x444444;  //shifter
+    if (col_char == 'd') color = 0x440000;  //accelerator
+    if (col_char == 'e') color = 0x444400;  //reverse
+
+    if (col_char == '1') color = 0x000088;  //p1
+    if (col_char == '2') color = 0x008888;  //p2
+    if (col_char == '3') color = 0x000044;  //p3
+  
+    if (y==0) pixel_rows0.setPixelColor(x, color);
+    if (y==1) pixel_rows1.setPixelColor(x, color);
+    if (y==2) pixel_rows2.setPixelColor(x, color);
+    if (y==3) pixel_rows3.setPixelColor(x, color);
+    if (y==4) pixel_rows4.setPixelColor(x, color);
+}
+
+
+
+
+
+//IGNORE EVERYTHING AFTER THIS
+
+
+//NOT USED
 void display_from_string(String line){
   for (int x=0; x<NUM_COLS; x++){
     for (int y=0; y<NUM_ROWS; y++){
@@ -162,7 +224,7 @@ void display_from_string(String line){
 
       char this_char = line[x + y * NUM_COLS];
 
-      uint32_t color = 0x111111;
+      uint32_t color = 0x000000;
 
       if (this_char == 'r') color = 0x440000;
       if (this_char == 'g') color = 0x004400;
@@ -170,6 +232,7 @@ void display_from_string(String line){
 
       if (y==0) pixel_rows0.setPixelColor(x, color);
       if (y==1) pixel_rows1.setPixelColor(x, color);
+      if (y==2) pixel_rows2.setPixelColor(x, color);
 
        //pixel_rows[y].setPixelColor(x, color);
     
@@ -178,20 +241,8 @@ void display_from_string(String line){
 
   pixel_rows0.show();
   pixel_rows1.show(); 
+  pixel_rows2.show(); 
 }
-
-//sets an individual pixel value but does not update the strand. call show() to do that
-void set_pixel(int x, int y, char col_char){
-    uint32_t color = 0x111111;
-
-    if (col_char == 'r') color = 0x440000;
-    if (col_char == 'g') color = 0x004400;
-    if (col_char == 'b') color = 0x000044;
-  
-    if (y==0) pixel_rows0.setPixelColor(x, color);
-    if (y==1) pixel_rows1.setPixelColor(x, color);
-}
-
 
 //JUST FOR TESTING
 void display_game(){

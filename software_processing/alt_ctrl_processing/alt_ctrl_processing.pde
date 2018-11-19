@@ -9,8 +9,8 @@ int cols = 85; //should be divisible by 8
 int rows = 3;
 int numPlayers = 2; //up to 5 players? mebbes?
 int numSides = 8;
-float startSpeed = 0.1;
-float speedMult = 1.5;
+float startSpeed = 0.02;
+float speedMult = 1.1;
 int winner = -1;
 boolean gameOver = false;
 boolean gameBegun = false;
@@ -51,7 +51,7 @@ void setup() {
     // is always my  FTDI adaptor, so I open Serial.list()[0].
     // On Windows machines, this generally opens COM1.
     // Open whatever port is the one you're using.
-    String portName = Serial.list()[0];
+    String portName = Serial.list()[1];
     myPort = new Serial(this, portName, 9600);
 
     println("done serial setup");
