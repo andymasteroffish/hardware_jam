@@ -3,19 +3,19 @@ import processing.serial.*;
 
 Serial myPort;  // Create object from Serial class
 int val;        // Data received from the serial port
-boolean useSerial = true;
+boolean useSerial = false;
 
 int cols = 85; //should be divisible by 8
 int rows = 3;
 int numPlayers = 2; //up to 5 players? mebbes?
 int numSides = 8;
-float startSpeed = 0.02;
+float startSpeed = 0.1;//0.02;
 float speedMult = 1.1;
 int winner = -1;
 boolean gameOver = false;
 boolean gameBegun = false;
 
-int blockH = int((2.0/3.0) * rows);
+int blockH = int((1.0/3.0) * rows);
 int shiftH = 2;
 int accH = 1;
 int sideW = cols / numSides; //pixels per side
@@ -39,7 +39,7 @@ color[] playerColor = new color[numPlayers];
 
 
 void setup() {
-  size(3000, 300);
+  size(3400, 300);
   if (useSerial && !gameOver) {
     for (int i=0; i<Serial.list().length; i++) {
       println(i+":"+Serial.list()[i]);
@@ -84,11 +84,11 @@ void setup() {
   sideAction[0] = 1;
   sideAction[1] = 1;
   sideAction[2] = 2;
-  sideAction[3] = 0;
+  sideAction[3] = 1;
   sideAction[4] = 2;
   sideAction[5] = 3;
   sideAction[6] = 1;
-  sideAction[7] = 2;
+  sideAction[7] = 0;
 
   updateSides(); //update interaction side elements
 }
@@ -96,7 +96,7 @@ void setup() {
 void draw() {
   //processing stuff
   background(0);
-  stroke(255);
+  stroke(80);
   ellipseMode(CORNER);
 
   displayBoard(); //board before any players
@@ -119,7 +119,8 @@ void displayBoard() {
     for (int x = 0; x < cols; x++) {
       switch (pixel[y][x]) {
       case 'a': //empty
-        fill((x / sideW) * (255 / numSides));
+        fill(0);
+        //fill((x / sideW) * (255 / numSides)); //differently colored sides
         break;
       case 'b': //blocked
         fill(255, 0, 0);
@@ -146,7 +147,7 @@ void displayBoard() {
 
 
       //draw out the pixel
-      ellipse(x * pixelScale, y * pixelScale, pixelScale, pixelScale);
+      ellipse(x * pixelScale, y * pixelScale, pixelScale/1.7, pixelScale/1.7);
     }
   }
 }

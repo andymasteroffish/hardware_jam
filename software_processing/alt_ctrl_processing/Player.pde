@@ -33,7 +33,7 @@ void runPlayers() {
     }
 
 
-    ellipse(playerX[i] * pixelScale, playerY[i] * pixelScale, pixelScale, pixelScale);
+    ellipse(playerX[i] * pixelScale, playerY[i] * pixelScale, pixelScale/1.7, pixelScale/1.7);
   }
 }
 void moveFwd(int player) {
