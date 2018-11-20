@@ -34,7 +34,8 @@ float[] playerSpeed = new float[numPlayers];
 
 color[] playerColor = new color[numPlayers];
 
-
+int[] visibleX = new int[numPlayers];
+int visibleRad = 10;
 
 
 
@@ -56,16 +57,16 @@ void setup() {
 
     println("done serial setup");
   }
-  
-    gameOver = false;
-    gameBegun = false;
-    winner = -1;
+
+  gameOver = false;
+  gameBegun = false;
+  winner = -1;
 
   pixelScale = width / cols;
 
   //default states
   resetMatrix(); 
-  
+
   for (int i = 0; i < numPlayers; i++) {
     playerX[i] = i; //separated so they dont overlap
     if (numPlayers == 2) playerY[i] = i * (rows - 1); //put on opposite side 
@@ -100,20 +101,18 @@ void draw() {
   ellipseMode(CORNER);
 
   displayBoard(); //board before any players
-  
+
   //checkInput(); //using keypressed in processing ... only run this if there is new input?
   if (!gameBegun) displayIntro();
   else if (!gameOver) runPlayers();
   else displayWinner(winner);
   output();
-  
-  
 }
 
 
 
 void displayBoard() {
-  
+
 
   for (int y = 0; y < rows; y++) {
     for (int x = 0; x < cols; x++) {
@@ -145,7 +144,14 @@ void displayBoard() {
         break;
       }
 
-
+      //processing
+      if (isVisible(0, x) || isVisible(1, x)) {
+       stroke(255);
+      } else {
+        fill(0);
+        stroke(30);
+      } 
+      
       //draw out the pixel
       ellipse(x * pixelScale, y * pixelScale, pixelScale/1.7, pixelScale/1.7);
     }
@@ -161,11 +167,11 @@ void resetCol(int col) {
 
 
 void displayIntro() {
-  
+
   int mod = (frameCount/3) % cols;
   String abc = "abcde123";
   println("mod=" + mod);
-  
+
   for (int y = 0; y < rows; y++) {
     for (int x = 0; x < cols; x++) {
       int loc = x + mod + y * cols;
@@ -173,19 +179,16 @@ void displayIntro() {
       //print(pixel[y][x]);
       //if (loc % cols == mod) pixel[y][x] = 'a';
       //pixel[i][j] = Integer.toString(player).charAt(0);
-      
     }
   }
-  
 }
 
-void resetMatrix(){
-  
+void resetMatrix() {
+
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
       pixel[i][j] = 'a';
     }
   }
   updateSides();
-
 }
