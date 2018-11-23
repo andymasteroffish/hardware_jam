@@ -8,7 +8,14 @@ void runPlayers() {
   //override those values with player
   for (int i = 0; i < numPlayers; i++) {
     playerSpeed[i] = constrain(playerSpeed[i], -0.99f, 0.99f); //prevent it from skipping things
-    fill(playerColor[i]);
+    if (isVisible(0, (int)playerX[0]) || isVisible(1, (int)playerX[1])) {
+      fill(playerColor[i]); //processing
+      stroke(playerColor[i]);
+    } else {
+      fill(30);
+      stroke(30);
+      
+    }
 
     char current = pixel[playerY[i]][(int)playerX[i]];
     switch (current) {
@@ -33,7 +40,7 @@ void runPlayers() {
     }
 
 
-    ellipse(playerX[i] * pixelScale, playerY[i] * pixelScale, pixelScale, pixelScale);
+    ellipse(playerX[i] * pixelScale, playerY[i] * pixelScale, pixelScale/1.7, pixelScale/1.7);
   }
 }
 void moveFwd(int player) {
