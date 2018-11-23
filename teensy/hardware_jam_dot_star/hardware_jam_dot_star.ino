@@ -16,11 +16,11 @@ struct Button{
 //this is ugly, but putting them in an array from the start keeps failing
 //data pin then clock pin
 //data is green, clock is yellow
-Adafruit_DotStar pixel_rows0 = Adafruit_DotStar(NUM_COLS, 4,5 , DOTSTAR_BRG);
-Adafruit_DotStar pixel_rows1 = Adafruit_DotStar(NUM_COLS, 6,7, DOTSTAR_BRG);
-Adafruit_DotStar pixel_rows2 = Adafruit_DotStar(NUM_COLS, 11, 12, DOTSTAR_BRG);
-Adafruit_DotStar pixel_rows3 = Adafruit_DotStar(NUM_COLS, 13, 14, DOTSTAR_BRG);
-Adafruit_DotStar pixel_rows4 = Adafruit_DotStar(NUM_COLS, 15, 16, DOTSTAR_BRG);
+Adafruit_DotStar pix0 = Adafruit_DotStar(NUM_COLS, 4,5 , DOTSTAR_BRG);
+Adafruit_DotStar pix1 = Adafruit_DotStar(NUM_COLS, 6,7, DOTSTAR_BRG);
+Adafruit_DotStar pix2 = Adafruit_DotStar(NUM_COLS, 11, 12, DOTSTAR_BRG);
+Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS, 13, 14, DOTSTAR_BRG);
+Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS, 15, 16, DOTSTAR_BRG);
 
 //getting serial
 char buff[256];
@@ -43,23 +43,23 @@ void setup() {
   Serial.begin(9600); 
 
   //actually throw the pixel rows into an array
-  //pixel_rows[0] = pixel_rows0;
-  //pixel_rows[1] = pixel_rows1;
+  //pix[0] = pix0;
+  //pix[1] = pix1;
   
-   pixel_rows0.begin();
-   pixel_rows0.show();
+   pix0.begin();
+   pix0.show();
    
-   pixel_rows1.begin();
-   pixel_rows1.show();
+   pix1.begin();
+   pix1.show();
    
-   pixel_rows2.begin();
-   pixel_rows2.show();
+   pix2.begin();
+   pix2.show();
 
-   pixel_rows3.begin();
-   pixel_rows3.show();
+   pix3.begin();
+   pix3.show();
 
-   pixel_rows4.begin();
-   pixel_rows4.show();
+   pix4.begin();
+   pix4.show();
   
 
   //buttons
@@ -154,11 +154,11 @@ void loop() {
 
   //showing the thing
   //display_game();
-  pixel_rows0.show();
-  pixel_rows1.show(); 
-  pixel_rows2.show(); 
-  pixel_rows3.show(); 
-  pixel_rows4.show(); 
+  pix0.show();
+  pix1.show(); 
+  pix2.show(); 
+  pix3.show(); 
+  pix4.show(); 
 
 }
 
@@ -201,68 +201,9 @@ void set_pixel(int x, int y, char col_char){
     if (col_char == '2') color = 0x008888;  //p2
     if (col_char == '3') color = 0x000044;  //p3
   
-    if (y==0) pixel_rows0.setPixelColor(x, color);
-    if (y==1) pixel_rows1.setPixelColor(x, color);
-    if (y==2) pixel_rows2.setPixelColor(x, color);
-    if (y==3) pixel_rows3.setPixelColor(x, color);
-    if (y==4) pixel_rows4.setPixelColor(x, color);
-}
-
-
-
-
-
-//IGNORE EVERYTHING AFTER THIS
-
-
-//NOT USED
-void display_from_string(String line){
-  for (int x=0; x<NUM_COLS; x++){
-    for (int y=0; y<NUM_ROWS; y++){
-
-      //int char_pos = ;
-
-      char this_char = line[x + y * NUM_COLS];
-
-      uint32_t color = 0x000000;
-
-      if (this_char == 'r') color = 0x440000;
-      if (this_char == 'g') color = 0x004400;
-      if (this_char == 'b') color = 0x000044;
-
-      if (y==0) pixel_rows0.setPixelColor(x, color);
-      if (y==1) pixel_rows1.setPixelColor(x, color);
-      if (y==2) pixel_rows2.setPixelColor(x, color);
-
-       //pixel_rows[y].setPixelColor(x, color);
-    
-    }
-  }
-
-  pixel_rows0.show();
-  pixel_rows1.show(); 
-  pixel_rows2.show(); 
-}
-
-//JUST FOR TESTING
-void display_game(){
-  for (int x=0; x<NUM_COLS; x++){
-    for (int y=0; y<NUM_ROWS; y++){
-
-      uint32_t color = 0x110000;
-
-      if (player_x == x && player_y == y){
-        color = 0x004400;
-      }
-
-      if (y==0) pixel_rows0.setPixelColor(x, color);
-      if (y==1) pixel_rows1.setPixelColor(x, color);
-
-       //pixel_rows[y].setPixelColor(x, color);
-    
-    }
-  }
-
-  pixel_rows0.show();
-  pixel_rows1.show();
+    if (y==0) pix0.setPixelColor(x, color);
+    if (y==1) pix1.setPixelColor(x, color);
+    if (y==2) pix2.setPixelColor(x, color);
+    if (y==3) pix3.setPixelColor(x, color);
+    if (y==4) pix4.setPixelColor(x, color);
 }

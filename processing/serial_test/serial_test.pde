@@ -73,7 +73,7 @@ void draw() {
 
 
 void send_pixels(){
-  //get the difference betwene current grid and last sent grid
+  //get the difference between current grid and last sent grid
   for (int y=0; y<rows; y++){
     for (int x=0; x<cols; x++){
       if (grid[x][y] != last_sent_grid[x][y]){
