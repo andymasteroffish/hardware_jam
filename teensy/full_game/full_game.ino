@@ -49,9 +49,13 @@ int winner = -1;
 boolean gameOver = false;
 boolean gameBegun = false;
 
-//maintaining pixels FOR DEBUG DISPLAY ONLY
+//maintaining pixels
 char pixel[NUM_COLS][NUM_ROWS];
 char last_sent_grid[NUM_COLS][NUM_ROWS];
+
+//using serial for a debug display in processing
+String debug_display_buffer = "";       //buffer size maxes out at 64 bytes, our messages can be up to 8 chars long, so max of 8 pixels per message
+int num_queued_debug_display = 0;
 
 //buttons
 int debounce_time = 30; //millis
@@ -68,8 +72,12 @@ Adafruit_DotStar pix2 = Adafruit_DotStar(NUM_COLS, 11, 12, DOTSTAR_BRG);
 Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS, 13, 14, DOTSTAR_BRG);
 Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS, 15, 16, DOTSTAR_BRG);
 
+//trakcing which columns have changed this frame
+int updatedCols[10];
+int numUpdatedCols = 0;
+
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(345600);
 
   //Serial.write("hello");
 
@@ -166,7 +174,7 @@ void setup() {
   pix4.begin();
   pix4.show();
 
-  reset();
+  //reset();  //testing
 }
 
 void reset() {
@@ -192,17 +200,11 @@ void loop() {
   else if (!gameOver)  runGame();
   else                 displayWinner(winner);
 
+  //displaying the thing
   setLEDs();
 
-  //showing the thing
-  if (use_debug_serial_display) {
-    debugDisplay();
-  } else {
-    pix0.show();
-    pix1.show();
-    pix2.show();
-    pix3.show();
-    pix4.show();
+  if (use_debug_serial_display && num_queued_debug_display > 0){
+    sendDebugDisplayMessage();
   }
 }
 
@@ -357,14 +359,24 @@ void displayGame() {
 
 
 void displayIntro() {
-  int mod = (millis() / 100) % NUM_COLS;
+  int mod = (millis() / 1000) % NUM_COLS;
   String abc = "-bsar01";
   //println("mod=" + mod);
 
-  for (int y = 0; y < NUM_ROWS; y++) {
-    for (int x = 0; x < NUM_COLS; x++) {
-      int loc = x + mod + y * NUM_COLS;
-      pixel[x][y] = abc.charAt(loc % abc.length());
+  //normal display
+  if (!use_debug_serial_display){
+    for (int y = 0; y < NUM_ROWS; y++) {
+      for (int x = 0; x < NUM_COLS; x++) {
+        int loc = x + mod + y * NUM_COLS;
+        pixel[x][y] = abc.charAt(loc % abc.length());
+      }
+    }
+  }
+
+  //debug display with fewer changing pixels
+  else{
+    for (int y = 0; y < NUM_ROWS; y++) {
+      pixel[mod][y] = 'b';
     }
   }
 }
@@ -391,50 +403,102 @@ void resetMatrix() {
 }
 
 void setLEDs() {
+  boolean anythingChanged = false;
+
   for (int y = 0; y < NUM_ROWS; y++) {
     for (int x = 0; x < NUM_COLS; x++) {
 
-      uint32_t color = 0x000000;  //'-'
+      //chekc if this pixel has changed
+      if (pixel[x][y] != last_sent_grid[x][y]) {
+        char col_char = pixel[x][y];
+        uint32_t color = 0x000000;  //'-'
 
-      if (col_char == 'b') color = 0x004400;  //blocked
-      if (col_char == 's') color = 0x444444;  //shifter
-      if (col_char == 'a') color = 0x440000;  //accelerator
-      if (col_char == 'r') color = 0x444400;  //reverse
+        if (col_char == 'b') color = 0x004400;  //blocked
+        if (col_char == 's') color = 0x444444;  //shifter
+        if (col_char == 'a') color = 0x440000;  //accelerator
+        if (col_char == 'r') color = 0x444400;  //reverse
 
-      if (col_char == '0') color = 0x000088;  //p1
-      if (col_char == '1') color = 0x008888;  //p2
-      if (col_char == '2') color = 0x000044;  //p3
+        if (col_char == '0') color = 0x000088;  //p1
+        if (col_char == '1') color = 0x008888;  //p2
+        if (col_char == '2') color = 0x000044;  //p3
 
-      if (y == 0) pix0.setPixelColor(x, color);
-      if (y == 1) pix1.setPixelColor(x, color);
-      if (y == 2) pix2.setPixelColor(x, color);
-      if (y == 3) pix3.setPixelColor(x, color);
-      if (y == 4) pix4.setPixelColor(x, color);
+        if (y == 0) pix0.setPixelColor(x, color);
+        if (y == 1) pix1.setPixelColor(x, color);
+        if (y == 2) pix2.setPixelColor(x, color);
+        if (y == 3) pix3.setPixelColor(x, color);
+        if (y == 4) pix4.setPixelColor(x, color);
+
+        anythingChanged = true;
+
+        if (use_debug_serial_display) {
+          debugDisplay(x, y, col_char);
+        }
+      }
+    }
+  }
+
+  //if any pixels were changed, updated all of the LEDs and store the current grid for comparison next frame
+  if (anythingChanged) {
+    pix0.show();
+    pix1.show();
+    pix2.show();
+    pix3.show();
+    pix4.show();
+
+    //  //store the current grid for comparison
+    for (int y = 0; y < NUM_ROWS; y++) {
+      for (int x = 0; x < NUM_COLS; x++) {
+        last_sent_grid[x][y] = pixel[x][y];
+      }
     }
   }
 }
+
+
+void debugDisplay(int x, int y, char col){
+  String line = String(x) + "," + String(y) + "," + pixel[x][y] + "\n";
+  debug_display_buffer += line;
+  num_queued_debug_display++;
+
+  if (num_queued_debug_display == 8){
+    sendDebugDisplayMessage();
+  }
+  
+  //Serial.print(line);
+}
+
+void sendDebugDisplayMessage(){
+  //send it
+  Serial.print(debug_display_buffer);
+  
+  //reset it
+  num_queued_debug_display = 0;
+  debug_display_buffer = "";
+}
+
 
 //sending serial to Processing
 //this does not really work
-void debugDisplay() {
-  //int start_time = millis();
+//void debugDisplay() {
+//  //int start_time = millis();
+//
+//  String message = "";
+//  //get the difference between current grid and last sent grid
+//  for (int y = 0; y < NUM_ROWS; y++) {
+//    for (int x = 0; x < NUM_COLS; x++) {
+//      message += pixel[x][y];
+//    }
+//    message += '\n';
+//  }
+//  message += '|';
+//
+//  Serial.print(message);
+//
+//  //int end_time = millis() - start_time;
+//  //String time_message = "it took "+String(end_time);
+//  //Serial.println(time_message);
+//}
 
-  String message = "";
-  //get the difference between current grid and last sent grid
-  for (int y = 0; y < NUM_ROWS; y++) {
-    for (int x = 0; x < NUM_COLS; x++) {
-      message += pixel[x][y];
-    }
-    message += '\n';
-  }
-  message += '|';
-
-  Serial.print(message);
-
-  //int end_time = millis() - start_time;
-  //String time_message = "it took "+String(end_time);
-  //Serial.println(time_message);
-}
 
 //Was tyring to setup the debug display the same way that we were sending info from Processing during the jam but it was way too slow
 
