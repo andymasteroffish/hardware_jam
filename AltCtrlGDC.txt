@@ -1,0 +1,17 @@
+AltCtrlGDC: Column
+
+//If chosen, we need to share your team or individual name(s) to announce: *
+Andy Wallace, Juno Morrow
+//If chosen, we need to share your game submission's name: * *
+Column
+//If chosen, we will need a public video URL to share (YouTube or Vimeo preferred): * *
+
+//Please submit ONE (1) video link for judges that demonstrates the game and controller (private, unlisted or password-protected video is OK; a filmed video with split-screen or clear explanations is appreciated): *
+//[help us clearly understand how the controller(s) and game(s) work together and how the controller creates a unique experience]
+
+//Please state the space that your setup will require dimension in inches (width x height x depth) of game/controller and detailed notes about how it should be set up* *
+Column is approximately 36" x 50" x 36" and should have a ~36" clearance around to allow for multiple players to circumnavigate. It requires an A/C outlet for power. The cable leading to the power will be taped down to prevent players from tripping.
+
+//Please explain in approximately one paragraph what makes this entry special and 'alt' (alternative to traditional controls). Please explain how this experience can only be captured with this unique control scheme. *
+
+//Optional: if you have any other material/links for the judges, (website, design images, etc) please include here:
