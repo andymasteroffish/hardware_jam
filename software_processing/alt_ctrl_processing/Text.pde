@@ -214,11 +214,11 @@ char[][] convertChar(char thisChar, char yes) { //yesis what char to return
        charMatrix = clone2D(right);
       break;
      case '|':
-       char[][] here ={   {'d',' ',' ',' ',' '},
-                          {'b',' ',' ',' ',' '},
-                          {'c',' ',' ',' ',' '},
-                          {'b',' ',' ',' ',' '},
-                          {'d',' ',' ',' ',' '} };
+       char[][] here ={   {yes,' ',' ',' ',' '},
+                          {yes,' ',' ',' ',' '},
+                          {yes,' ',' ',' ',' '},
+                          {yes,' ',' ',' ',' '},
+                          {yes,' ',' ',' ',' '} };
        charMatrix = clone2D(here);
       break;
      case 'y':
