@@ -7,11 +7,11 @@
 #define NUM_OBSTACLES 8
 #define NUM_PLAYERS 2
 
-boolean use_debug_serial_display = true;
+boolean use_debug_serial_display = false;
 
 //game values
-int startSpeed = 800;  //measured in millis between steps
-float speedMult = 0.5;
+int startSpeed = 500;  //measured in millis between steps
+float speedMult = 0.8;  //the closer this is to 0, the faster they'll go
 
 /* obstacles can be any one of the following
   b - blocker
@@ -79,7 +79,7 @@ int numUpdatedCols = 0;
 void setup() {
   Serial.begin(345600);
 
-  //Serial.write("hello");
+  Serial.write("hello");
 
   gameOver = false;
   gameBegun = false;
@@ -107,22 +107,38 @@ void setup() {
   }
 
   //set the types
+  //moving the X values to match the buttons
   obstacles[0].action = 's';
+  obstacles[0].x = 2;
+  
   obstacles[1].action = 's';
+  obstacles[1].x += 1;
+  
   obstacles[2].action = 'a';
+  obstacles[2].x += 0;
+  
   obstacles[3].action = 'b';
+  obstacles[3].x += 5;
+  
   obstacles[4].action = 'a';
+  obstacles[4].x += 4;
+  
   obstacles[5].action = 'r';
+  obstacles[5].x += 3;
+  
   obstacles[6].action = 's';
+  obstacles[6].x += 2;
+  
   obstacles[7].action = 'a';
+  obstacles[7].x += 7;
 
   //dpending on the type, turn a few on
   for (int i = 0; i < NUM_OBSTACLES; i++) {
-    if (obstacles[i].action == 'b' || obstacles[i].action == 's') {
+    if (obstacles[i].action == 's') {
       obstacles[i].onRows[0] = true;
       obstacles[i].onRows[1] = true;
     }
-    if (obstacles[i].action == 'a' || obstacles[i].action == 'r') {
+    if (obstacles[i].action == 'a' || obstacles[i].action == 'r' || obstacle.action == 'b') {
       obstacles[i].onRows[0] = true;
     }
   }
@@ -185,12 +201,14 @@ void reset() {
   gameOver = false;
   gameBegun = true;
   for (int i = 0; i < NUM_PLAYERS; i++) {
-    players[i].x = 1 + i * 2; //separated so they dont overlap
     if (NUM_PLAYERS == 2) players[i].y = i * (NUM_ROWS - 1); //put on opposite side
     else                  players[i].y = i; //use its own lane
     players[i].speed = startSpeed;
     players[i].dir = 1;
   }
+
+  players[0].x = 3;
+  players[1].x = 23;
 }
 
 void loop() {
@@ -295,7 +313,9 @@ int checkWinners() { //returns winner index if won
   if (playersAlive == 1) {
     //println("winner found (player " + winPlayer);
     return winPlayer;
-  } else return -1;
+  } else{
+    return -1;
+  }
 }
 
 
@@ -325,6 +345,7 @@ void button_pressed(int id) {
   if (!use_debug_serial_display) {
     Serial.print("pressed ");
     Serial.println(id);
+    //return; //kill me
   }
   //reset the game if we're not playing
   if (!gameBegun || gameOver) {
@@ -359,7 +380,7 @@ void displayGame() {
 
 
 void displayIntro() {
-  int mod = (millis() / 1000) % NUM_COLS;
+  int mod = (millis() / 600) % NUM_COLS;
   String abc = "-bsar01";
   //println("mod=" + mod);
 
@@ -381,9 +402,9 @@ void displayIntro() {
   }
 }
 void displayWinner(int player) {
-  int mod = (millis() / 100) % NUM_COLS;
+  int mod = (millis() / 50) % NUM_COLS;
   //println("PLAYER " + player + " WON!!!" + " mod=" + mod);
-  for (int y = 0; y < NUM_COLS; y++) {
+  for (int y = 0; y < NUM_ROWS; y++) {
     for (int x = 0; x < NUM_COLS; x++) {
       int loc = x + y * NUM_COLS;
       pixel[x][y] = players[player].identifier;// Integer.toString(player).charAt(0);
