@@ -6,7 +6,7 @@ int val;        // Data received from the serial port
 boolean useSerial = false;
 
 int cols = 85; //should be divisible by 8
-int rows = 3;
+int rows = 5;
 int numPlayers = 2; //up to 5 players? mebbes?
 int numSides = 8;
 float startSpeed = 0.1;//0.02;
@@ -14,6 +14,11 @@ float speedMult = 1.1;
 int winner = -1;
 boolean gameOver = false;
 boolean gameBegun = false;
+int marqSpeed = 20; //inverted
+String introMsg[] = {" column", "go"}; //max of ~8 chars
+int textCycleTimer = 5;
+int textTracking = 2;
+int textIndex = 0;
 
 int blockH = int((1.0/3.0) * rows);
 int shiftH = 2;
@@ -35,7 +40,7 @@ float[] playerSpeed = new float[numPlayers];
 color[] playerColor = new color[numPlayers];
 
 int[] visibleX = new int[numPlayers];
-int visibleRad = 10;
+int visibleRad = cols; //change to lower number to simulate limited view for players ... set to cols for maximal view
 
 
 
@@ -121,6 +126,9 @@ void displayBoard() {
         fill(0);
         //fill((x / sideW) * (255 / numSides)); //differently colored sides
         break;
+      case ' ': //also empty
+        fill(0);
+        break;
       case 'b': //blocked
         fill(255, 0, 0);
         break;
@@ -146,12 +154,12 @@ void displayBoard() {
 
       //processing
       if (isVisible(0, x) || isVisible(1, x)) {
-       stroke(255);
+        stroke(255);
       } else {
         fill(0);
         stroke(30);
       } 
-      
+
       //draw out the pixel
       ellipse(x * pixelScale, y * pixelScale, pixelScale/1.7, pixelScale/1.7);
     }
@@ -168,19 +176,53 @@ void resetCol(int col) {
 
 void displayIntro() {
 
-  int mod = (frameCount/3) % cols;
-  String abc = "abcde123";
-  println("mod=" + mod);
+  
+  
 
-  for (int y = 0; y < rows; y++) {
-    for (int x = 0; x < cols; x++) {
-      int loc = x + mod + y * cols;
-      pixel[y][x] = abc.charAt(loc % abc.length());
-      //print(pixel[y][x]);
-      //if (loc % cols == mod) pixel[y][x] = 'a';
-      //pixel[i][j] = Integer.toString(player).charAt(0);
-    }
+
+
+  //new intro with text marquee
+  if (frameCount % 180 == 0) {
+    if (textIndex < introMsg.length - 1) textIndex++;
+    else textIndex = 0;
+    println("cycling..." + textIndex);
   }
+  if (textIndex == 0) {
+    
+    //rainbow
+    int mod = frameCount/(marqSpeed/20) % cols;
+    String abc = "abcde123";
+  
+    for (int y = 0; y < rows; y++) {
+      for (int x = 0; x < cols; x++) {
+        int loc = x + mod + y * cols;
+        pixel[y][x] = abc.charAt(loc % abc.length());
+      }
+    }
+    
+    marqueeText(introMsg[0]);
+  } else {
+    String pre = "|     ";
+    int count = frameCount/6 % 6;
+    if (count == 0)      pre = "|     ";
+    else if (count == 1) pre = "|    <";
+    else if (count == 2) pre = "|   < ";
+    else if (count == 3) pre = "|  <  ";
+    else if (count == 4) pre = "| <   ";
+    else if (count == 5) pre = "|<    ";
+    
+    String post = "|    ";
+    if (count == 0)      post = ">    ";
+    else if (count == 1) post = " >   ";
+    else if (count == 2) post = "  >  ";
+    else if (count == 3) post = "   > ";
+    else if (count == 4) post = "    >";
+    else if (count == 5) post = "     ";
+    
+    displayText(pre + introMsg[1] + post);
+    
+  }
+
 }
 
 void resetMatrix() {

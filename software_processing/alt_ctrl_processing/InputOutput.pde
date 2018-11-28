@@ -1,8 +1,41 @@
 void visibleInput() {
   if (keyPressed) {
+    /*
+    //convert chars to 
+    if (key == 'a' || 
+        key == 'b' || 
+        key == 'c' || 
+        key == 'd' || 
+        key == 'e' || 
+        key == 'f' || 
+        key == 'g' || 
+        key == 'h' || 
+        key == 'i' || 
+        key == 'j' || 
+        key == 'k' || 
+        key == 'l' || 
+        key == 'm' || 
+        key == 'n' || 
+        key == 'o' || 
+        key == 'p' || 
+        key == 'q' || 
+        key == 'r' || 
+        key == 's' || 
+        key == 't' || 
+        key == 'u' || 
+        key == 'v' || 
+        key == 'w' || 
+        key == 'x' || 
+        key == 'y' ||
+        key == 'z' )           insertChar(convertChar(key, 'b'), 0);
+        */
     switch (key) {
     case 'a': 
       visibleX[0]--;
+      //convertChar(key, 'b');
+      break;
+    case 'b': 
+      convertChar(key, 'b');
       break;
     case 'd': 
       visibleX[0]++;
@@ -20,6 +53,18 @@ void visibleInput() {
     }
   }
 }
+
+ //use to debug 
+ void print2D(char mat[][]) 
+  { 
+      // Loop through all rows 
+      for (int i = 0; i < mat.length; i++) {
+          println();
+          for (int j = 0; j < mat[i].length; j++) 
+              System.out.print(mat[i][j] + " "); 
+      }
+  } 
+  
 
 //just for processing
 boolean isVisible(int player, int pos) {
