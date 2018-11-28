@@ -15,7 +15,7 @@ int winner = -1;
 boolean gameOver = false;
 boolean gameBegun = false;
 int marqSpeed = 20; //inverted
-String introMsg[] = {" column", "go"}; //max of ~8 chars
+String introMsg[] = {" column", "run run run", "p21 wins", "go"}; //max of ~8 chars
 int textCycleTimer = 5;
 int textTracking = 2;
 int textIndex = 0;
@@ -186,8 +186,9 @@ void displayIntro() {
     if (textIndex < introMsg.length - 1) textIndex++;
     else textIndex = 0;
     println("cycling..." + textIndex);
+    resetMatrix();
   }
-  if (textIndex == 0) {
+  if (textIndex < introMsg.length - 1) {
     
     //rainbow
     int mod = frameCount/(marqSpeed/20) % cols;
@@ -200,7 +201,7 @@ void displayIntro() {
       }
     }
     
-    marqueeText(introMsg[0]);
+    marqueeText(introMsg[textIndex]);
   } else {
     String pre = "|     ";
     int count = frameCount/6 % 6;
@@ -219,7 +220,7 @@ void displayIntro() {
     else if (count == 4) post = "    >";
     else if (count == 5) post = "     ";
     
-    displayText(pre + introMsg[1] + post);
+    displayText(pre + introMsg[textIndex] + post);
     
   }
 

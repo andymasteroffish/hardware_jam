@@ -3,6 +3,24 @@
 char[][] convertChar(char thisChar, char yes) { //yesis what char to return
   char[][] charMatrix = new char[5][5];
   switch (thisChar){
+    case '1':
+      char[][] one = {   {' ',' ',yes,' ',' '},
+                         {' ',yes,yes,' ',' '},
+                         {' ',' ',yes,' ',' '},
+                         {' ',' ',yes,' ',' '},
+                         {yes,yes,yes,yes,yes}  };
+                         
+      charMatrix = clone2D(one);
+      break;
+    case '2':
+      char[][] two = {   {' ',yes,yes,yes,' '},
+                         {yes,' ',' ',' ',yes},
+                         {' ',' ',' ',yes,' '},
+                         {' ',yes,yes,' ',' '},
+                         {yes,yes,yes,yes,yes}  };
+                         
+      charMatrix = clone2D(two);
+      break;
     case 'a':
       char[][] a = {     {' ',' ',yes,' ',' '},
                          {' ',yes,' ',yes,' '},
