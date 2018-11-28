@@ -108,7 +108,7 @@ void setup() {
 
   //set the types
   //moving the X values to match the buttons
-  obstacles[0].action = 's';
+  obstacles[0].action = 'r';
   obstacles[0].x = 2;
   
   obstacles[1].action = 's';
@@ -117,19 +117,19 @@ void setup() {
   obstacles[2].action = 'a';
   obstacles[2].x += 0;
   
-  obstacles[3].action = 'b';
+  obstacles[3].action = 's';
   obstacles[3].x += 5;
   
-  obstacles[4].action = 'a';
+  obstacles[4].action = 'b';
   obstacles[4].x += 4;
   
   obstacles[5].action = 'r';
   obstacles[5].x += 3;
   
-  obstacles[6].action = 's';
+  obstacles[6].action = 'a';
   obstacles[6].x += 2;
   
-  obstacles[7].action = 'a';
+  obstacles[7].action = 's';
   obstacles[7].x += 7;
 
   //dpending on the type, turn a few on
@@ -138,7 +138,7 @@ void setup() {
       obstacles[i].onRows[0] = true;
       obstacles[i].onRows[1] = true;
     }
-    if (obstacles[i].action == 'a' || obstacles[i].action == 'r' || obstacle.action == 'b') {
+    if (obstacles[i].action == 'a' || obstacles[i].action == 'r' || obstacles[i].action == 'b') {
       obstacles[i].onRows[0] = true;
     }
   }
@@ -437,10 +437,10 @@ void setLEDs() {
         if (col_char == 'b') color = 0x004400;  //blocked
         if (col_char == 's') color = 0x444444;  //shifter
         if (col_char == 'a') color = 0x440000;  //accelerator
-        if (col_char == 'r') color = 0x444400;  //reverse
+        if (col_char == 'r') color = 0x004444;  //reverse
 
         if (col_char == '0') color = 0x000088;  //p1
-        if (col_char == '1') color = 0x008888;  //p2
+        if (col_char == '1') color = 0x888800;  //p2
         if (col_char == '2') color = 0x000044;  //p3
 
         if (y == 0) pix0.setPixelColor(x, color);
