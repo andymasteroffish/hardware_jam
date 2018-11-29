@@ -7,7 +7,7 @@
 #define NUM_OBSTACLES 8
 #define NUM_PLAYERS 2
 
-boolean use_debug_serial_display = false;
+boolean use_debug_serial_display = true;
 
 //game values
 int startSpeed = 400;  //measured in millis between steps
@@ -58,9 +58,12 @@ String debug_display_buffer = "";       //buffer size maxes out at 64 bytes, our
 int num_queued_debug_display = 0;
 
 //buttons
-int debounce_time = 30; //millis
+int debounce_time = 50; //millis
 #define NUM_BUTTONS 8
 Button buttons[NUM_BUTTONS];
+
+int button_lock_timer = 0;
+int button_lock_time = 1000;
 
 //LEDs
 //this is ugly, but putting them in an array from the start keeps failing
@@ -70,7 +73,7 @@ Adafruit_DotStar pix0 = Adafruit_DotStar(NUM_COLS, 4, 5 , DOTSTAR_BRG);
 Adafruit_DotStar pix1 = Adafruit_DotStar(NUM_COLS, 6, 7, DOTSTAR_BRG);
 Adafruit_DotStar pix2 = Adafruit_DotStar(NUM_COLS, 11, 12, DOTSTAR_BRG);
 Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS, 13, 14, DOTSTAR_BRG);    //right now this strip is messed up and we skip the first LED
-Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS, 15, 16, DOTSTAR_BRG);
+Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS + 1, 15, 16, DOTSTAR_BRG); //there was an extra LED on this one
 
 //trakcing which columns have changed this frame
 int updatedCols[10];
@@ -81,8 +84,9 @@ int frame_num = 0;
 
 void setup() {
   Serial.begin(345600);
-
-  Serial.write("hello");
+  if (!use_debug_serial_display){
+    Serial.write("hello");
+  }
 
   gameOver = false;
   gameBegun = false;
@@ -112,37 +116,41 @@ void setup() {
   //set the types
   //moving the X values to match the buttons
   obstacles[0].action = 'r';
-  obstacles[0].x = 2;
-
-  obstacles[1].action = 's';
-  obstacles[1].x += 1;
-
+  obstacles[1].action = 'b';//'s';
   obstacles[2].action = 'a';
-  obstacles[2].x += 0;
-
-  obstacles[3].action = 's';
-  obstacles[3].x += 5;
-
+  obstacles[3].action = 'b';//'s';
   obstacles[4].action = 'r';
-  obstacles[4].x += 4;
-
   obstacles[5].action = 'b';
-  obstacles[5].x += 3;
-
   obstacles[6].action = 'a';
-  obstacles[6].x += 2;
+  obstacles[7].action = 'b';//'s';
 
-  obstacles[7].action = 's';
+  obstacles[0].x = 2;
+  obstacles[1].x += 1;
+  obstacles[2].x += 0;
+  obstacles[3].x += 5;
+  obstacles[4].x += 4;
+  obstacles[5].x += 3;
+  obstacles[6].x += 2;
   obstacles[7].x += 7;
 
   //dpending on the type, turn a few on
   for (int i = 0; i < NUM_OBSTACLES; i++) {
     if (obstacles[i].action == 's') {
       obstacles[i].onRows[0] = true;
+      obstacles[i].onRows[2] = true;
+    }
+    if (obstacles[i].action == 'b') {
+      obstacles[i].onRows[0] = true;
+      obstacles[i].onRows[1] = true;
+      //obstacles[i].onRows[2] = true;
+    }
+    if (obstacles[i].action == 'a') {
+      obstacles[i].onRows[0] = true;
       obstacles[i].onRows[1] = true;
     }
-    if (obstacles[i].action == 'a' || obstacles[i].action == 'r' || obstacles[i].action == 'b') {
+    if (obstacles[i].action == 'r') {
       obstacles[i].onRows[0] = true;
+      obstacles[i].onRows[3] = true;
     }
   }
 
@@ -237,7 +245,14 @@ void loop() {
 void runGame() {
 
   winner = checkWinners(); //winner remains -1 if no winner
-  if (winner != -1) gameOver = true;
+  if (winner != -1 && !gameOver){
+    gameOver = true;
+    //if the game just ended, lock the buttons for a bit
+    button_lock_timer = millis() + button_lock_time;
+    if (use_debug_serial_display){
+      Serial.println("game just ended");
+    }
+  }
 
   //update our players
   for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -259,7 +274,7 @@ void advancePlayer(int p) {
     players[p].x = 0;
   }
   if (players[p].x == -1) {
-    players[p].x = NUM_COLS-1;
+    players[p].x = NUM_COLS - 1;
   }
 
   //check for obstacles
@@ -331,8 +346,15 @@ int checkWinners() { //returns winner index if won
 
 
 void checkInput() {
+  //check if controls are locked out right now
+  if (millis() < button_lock_timer){
+    //Serial.println("lock out");
+    return;
+  }
+  
   for (int i = 0; i < NUM_BUTTONS; i++) {
     if (millis() > buttons[i].next_check_time) {
+      
       //get the current value
       bool cur_val = false;
       if (digitalRead(buttons[i].pin) == LOW) {
@@ -359,8 +381,12 @@ void button_pressed(int id) {
     //return; //kill me
   }
   //reset the game if we're not playing
-  if (!gameBegun || gameOver) {
+  if (!gameBegun) {
     reset();
+  }
+  else if (gameOver){
+    gameBegun = false;
+    button_lock_timer = millis() + button_lock_time;
   }
 
   //bump this obstacle down one
@@ -419,7 +445,7 @@ void displayWinner(int player) {
     for (int x = 0; x < NUM_COLS; x++) {
       int loc = x + y * NUM_COLS;
       pixel[x][y] = players[player].identifier;// Integer.toString(player).charAt(0);
-      if (loc % NUM_COLS == mod || (loc + NUM_COLS/3) % NUM_COLS == mod || (loc + (NUM_COLS/3)*2) % NUM_COLS == mod ) pixel[x][y] = '-';
+      if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = '-';
     }
   }
   gameOver = true;
@@ -459,8 +485,8 @@ void setLEDs() {
         if (y == 1) pix1.setPixelColor(x, color);
         if (y == 2) pix2.setPixelColor(x, color);
         //row 3 is missed up so we need to skip the first pixel
-        if (y == 3){ 
-          if (x > 0)  pix3.setPixelColor(x-1, color);
+        if (y == 3) {
+          if (x > 0)  pix3.setPixelColor(x - 1, color);
         }
         if (y == 4) pix4.setPixelColor(x, color);
 
