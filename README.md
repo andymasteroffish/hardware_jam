@@ -1,6 +1,9 @@
 # hardware_jam
-DBAA Hardware Jam with Juno Morrow
 
-Using Teensy 3.2 and Dot Star LED Strips
+Circumnavigator!
 
-https://learn.adafruit.com/adafruit-neopixel-uberguide
+A game played on LEDs wrapped around a column.
+
+Started at DBAA Hardware Jam with Juno Morrow.
+
+Using Teensy 3.2 and Dot Star LED Strips.
