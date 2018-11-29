@@ -2,7 +2,7 @@
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 
 #define NUM_COLS 85
-#define NUM_ROWS 3
+#define NUM_ROWS 5
 
 #define NUM_OBSTACLES 8
 #define NUM_PLAYERS 2
@@ -10,7 +10,7 @@
 boolean use_debug_serial_display = false;
 
 //game values
-int startSpeed = 500;  //measured in millis between steps
+int startSpeed = 400;  //measured in millis between steps
 float speedMult = 0.8;  //the closer this is to 0, the faster they'll go
 
 /* obstacles can be any one of the following
@@ -69,12 +69,15 @@ Button buttons[NUM_BUTTONS];
 Adafruit_DotStar pix0 = Adafruit_DotStar(NUM_COLS, 4, 5 , DOTSTAR_BRG);
 Adafruit_DotStar pix1 = Adafruit_DotStar(NUM_COLS, 6, 7, DOTSTAR_BRG);
 Adafruit_DotStar pix2 = Adafruit_DotStar(NUM_COLS, 11, 12, DOTSTAR_BRG);
-Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS, 13, 14, DOTSTAR_BRG);
+Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS, 13, 14, DOTSTAR_BRG);    //right now this strip is messed up and we skip the first LED
 Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS, 15, 16, DOTSTAR_BRG);
 
 //trakcing which columns have changed this frame
 int updatedCols[10];
 int numUpdatedCols = 0;
+
+//timing
+int frame_num = 0;
 
 void setup() {
   Serial.begin(345600);
@@ -110,25 +113,25 @@ void setup() {
   //moving the X values to match the buttons
   obstacles[0].action = 'r';
   obstacles[0].x = 2;
-  
+
   obstacles[1].action = 's';
   obstacles[1].x += 1;
-  
+
   obstacles[2].action = 'a';
   obstacles[2].x += 0;
-  
+
   obstacles[3].action = 's';
   obstacles[3].x += 5;
-  
-  obstacles[4].action = 'b';
+
+  obstacles[4].action = 'r';
   obstacles[4].x += 4;
-  
-  obstacles[5].action = 'r';
+
+  obstacles[5].action = 'b';
   obstacles[5].x += 3;
-  
+
   obstacles[6].action = 'a';
   obstacles[6].x += 2;
-  
+
   obstacles[7].action = 's';
   obstacles[7].x += 7;
 
@@ -207,8 +210,11 @@ void reset() {
     players[i].dir = 1;
   }
 
+  //set player starting positions
   players[0].x = 3;
   players[1].x = 23;
+
+  frame_num = 0;
 }
 
 void loop() {
@@ -221,9 +227,11 @@ void loop() {
   //displaying the thing
   setLEDs();
 
-  if (use_debug_serial_display && num_queued_debug_display > 0){
+  if (use_debug_serial_display && num_queued_debug_display > 0) {
     sendDebugDisplayMessage();
   }
+
+  frame_num++;
 }
 
 void runGame() {
@@ -249,6 +257,9 @@ void advancePlayer(int p) {
   players[p].x += players[p].dir;
   if (players[p].x == NUM_COLS) {
     players[p].x = 0;
+  }
+  if (players[p].x == -1) {
+    players[p].x = NUM_COLS-1;
   }
 
   //check for obstacles
@@ -313,7 +324,7 @@ int checkWinners() { //returns winner index if won
   if (playersAlive == 1) {
     //println("winner found (player " + winPlayer);
     return winPlayer;
-  } else{
+  } else {
     return -1;
   }
 }
@@ -385,7 +396,7 @@ void displayIntro() {
   //println("mod=" + mod);
 
   //normal display
-  if (!use_debug_serial_display){
+  if (!use_debug_serial_display) {
     for (int y = 0; y < NUM_ROWS; y++) {
       for (int x = 0; x < NUM_COLS; x++) {
         int loc = x + mod + y * NUM_COLS;
@@ -395,7 +406,7 @@ void displayIntro() {
   }
 
   //debug display with fewer changing pixels
-  else{
+  else {
     for (int y = 0; y < NUM_ROWS; y++) {
       pixel[mod][y] = 'b';
     }
@@ -408,7 +419,7 @@ void displayWinner(int player) {
     for (int x = 0; x < NUM_COLS; x++) {
       int loc = x + y * NUM_COLS;
       pixel[x][y] = players[player].identifier;// Integer.toString(player).charAt(0);
-      if (loc % NUM_COLS == mod) pixel[x][y] = '-';
+      if (loc % NUM_COLS == mod || (loc + NUM_COLS/3) % NUM_COLS == mod || (loc + (NUM_COLS/3)*2) % NUM_COLS == mod ) pixel[x][y] = '-';
     }
   }
   gameOver = true;
@@ -443,10 +454,14 @@ void setLEDs() {
         if (col_char == '1') color = 0x888800;  //p2
         if (col_char == '2') color = 0x000044;  //p3
 
+
         if (y == 0) pix0.setPixelColor(x, color);
         if (y == 1) pix1.setPixelColor(x, color);
         if (y == 2) pix2.setPixelColor(x, color);
-        if (y == 3) pix3.setPixelColor(x, color);
+        //row 3 is missed up so we need to skip the first pixel
+        if (y == 3){ 
+          if (x > 0)  pix3.setPixelColor(x-1, color);
+        }
         if (y == 4) pix4.setPixelColor(x, color);
 
         anythingChanged = true;
@@ -476,22 +491,22 @@ void setLEDs() {
 }
 
 
-void debugDisplay(int x, int y, char col){
+void debugDisplay(int x, int y, char col) {
   String line = String(x) + "," + String(y) + "," + pixel[x][y] + "\n";
   debug_display_buffer += line;
   num_queued_debug_display++;
 
-  if (num_queued_debug_display == 8){
+  if (num_queued_debug_display == 8) {
     sendDebugDisplayMessage();
   }
-  
+
   //Serial.print(line);
 }
 
-void sendDebugDisplayMessage(){
+void sendDebugDisplayMessage() {
   //send it
   Serial.print(debug_display_buffer);
-  
+
   //reset it
   num_queued_debug_display = 0;
   debug_display_buffer = "";
