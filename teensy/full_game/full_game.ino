@@ -7,6 +7,8 @@
 #define NUM_OBSTACLES 8
 #define NUM_PLAYERS 2
 
+#define LETTER_WIDTH 5
+
 boolean use_debug_serial_display = true;
 
 //game values
@@ -423,12 +425,19 @@ void displayIntro() {
 
   //normal display
   if (!use_debug_serial_display) {
+
+    //flahsing
     for (int y = 0; y < NUM_ROWS; y++) {
       for (int x = 0; x < NUM_COLS; x++) {
         int loc = x + mod + y * NUM_COLS;
         pixel[x][y] = abc.charAt(loc % abc.length());
       }
     }
+
+    //show the title
+    String title_text = "circumnavigators";
+    int title_x = NUM_COLS - (millis() / 500) % (title_text.length()*(LETTER_WIDTH+1) + NUM_COLS);
+    printWord(title_text, '1', title_x);
   }
 
   //debug display with fewer changing pixels
