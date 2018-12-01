@@ -34,6 +34,11 @@ struct Player {
   int nextMoveTime;   //when the next move will occur
   int dir;            //1 is normal, -1 is reverse
   char identifier;
+
+  //death animation
+  boolean doingDeathAnim;
+  int deathAnimStep;
+  int nextDeathAnimStepTime;
 };
 
 //buttons
@@ -50,6 +55,8 @@ Player players[NUM_PLAYERS];
 int winner = -1;
 boolean gameOver = false;
 boolean gameBegun = false;
+
+int deathAnimStepTime = 150;
 
 //maintaining pixels
 char pixel[NUM_COLS][NUM_ROWS];
@@ -218,6 +225,9 @@ void reset() {
     else                  players[i].y = i; //use its own lane
     players[i].speed = startSpeed;
     players[i].dir = 1;
+
+    players[i].doingDeathAnim = false;
+    players[i].deathAnimStep = 0;
   }
 
   //set player starting positions
@@ -247,7 +257,7 @@ void loop() {
 void runGame() {
 
   winner = checkWinners(); //winner remains -1 if no winner
-  if (winner != -1 && !gameOver){
+  if (winner != -1 && !gameOver && !checkDeathAnimations()){
     gameOver = true;
     //if the game just ended, lock the buttons for a bit
     button_lock_timer = millis() + button_lock_time;
@@ -301,7 +311,7 @@ void doObstacleEffect(int p, int o) {
 
   //block
   if (action == 'b') {
-    players[p].speed = 0;
+    killPlayer(p);
   }
 
   //accelerate
@@ -329,6 +339,12 @@ void doObstacleEffect(int p, int o) {
   }
 }
 
+void killPlayer(int id) {
+  players[id].speed = 0;
+  players[id].doingDeathAnim = true;
+  players[id].nextDeathAnimStepTime = millis() + deathAnimStepTime;
+}
+
 int checkWinners() { //returns winner index if won
   int winPlayer = -1;
   int playersAlive = 0;
@@ -346,6 +362,14 @@ int checkWinners() { //returns winner index if won
   }
 }
 
+boolean checkDeathAnimations() {
+  for (int i = 0; i < NUM_PLAYERS; i++) {
+    if (players[i].doingDeathAnim == true) {
+      return true;
+    }
+  }
+  return false;
+}
 
 void checkInput() {
   //check if controls are locked out right now
@@ -414,6 +438,44 @@ void displayGame() {
   //add the players
   for (int i = 0; i < NUM_PLAYERS; i++) {
     pixel[players[i].x][players[i].y] = players[i].identifier;
+  }
+
+  //death animations
+  for (int i = 0; i < NUM_PLAYERS; i++) {
+    if (players[i].doingDeathAnim == true) {
+
+      //how far to go
+      int dist = 1 + players[i].deathAnimStep;
+
+      //get the points
+      int x_left = (players[i].x - dist + NUM_COLS) % NUM_COLS; //these need to loop
+      int x_right = (players[i].x + dist) % NUM_COLS;           //these need to loop
+      int y_top = players[i].y - dist;
+      int y_bot = players[i].y + dist;
+
+      //add them to the pixels (last few frames are blank)
+      if (players[i].deathAnimStep < 3) {
+        //diagonal
+        if (y_top >= 0)        pixel[x_left][y_top] = players[i].identifier;
+        if (y_bot < NUM_ROWS)  pixel[x_left][y_bot] = players[i].identifier;
+        if (y_top >= 0)        pixel[x_right][y_top] = players[i].identifier;
+        if (y_bot < NUM_ROWS)  pixel[x_right][y_bot] = players[i].identifier;
+
+        //horizontal
+        pixel[x_left][players[i].y] = players[i].identifier;
+        pixel[x_right][players[i].y] = players[i].identifier;
+      }
+
+      //time to update?
+      if (players[i].nextDeathAnimStepTime < millis()) {
+        players[i].deathAnimStep++;
+        players[i].nextDeathAnimStepTime = millis() + deathAnimStepTime;
+
+        if (players[i].deathAnimStep == 5) {
+          players[i].doingDeathAnim = false;
+        }
+      }
+    }
   }
 }
 
