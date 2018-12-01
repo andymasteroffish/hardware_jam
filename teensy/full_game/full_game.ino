@@ -88,14 +88,13 @@ Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS + 1, 15, 16, DOTSTAR_BRG); //t
 int updatedCols[10];
 int numUpdatedCols = 0;
 
-//timing
-int frame_num = 0;
-
 void setup() {
   Serial.begin(345600);
   if (!use_debug_serial_display){
     Serial.write("hello");
   }
+
+  randomSeed(analogRead(0));
 
   gameOver = false;
   gameBegun = false;
@@ -234,7 +233,14 @@ void reset() {
   players[0].x = 3;
   players[1].x = 23;
 
-  frame_num = 0;
+  //run through obstacles and randomize them
+  for (int i = 0; i < NUM_OBSTACLES; i++) {
+    int presses = (int)random(0,NUM_ROWS);
+    for (int k=0; k<presses; k++){
+      shiftObstacle(i); 
+    }
+  }
+
 }
 
 void loop() {
@@ -251,7 +257,6 @@ void loop() {
     sendDebugDisplayMessage();
   }
 
-  frame_num++;
 }
 
 void runGame() {
@@ -416,6 +421,10 @@ void button_pressed(int id) {
   }
 
   //bump this obstacle down one
+  shiftObstacle(id);
+}
+
+void shiftObstacle(int id) {
   boolean temp = obstacles[id].onRows[NUM_ROWS - 1];
   for (int r = NUM_ROWS - 1; r > 0; r--) {
     obstacles[id].onRows[r] = obstacles[id].onRows[r - 1];
