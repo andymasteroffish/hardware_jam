@@ -51,16 +51,26 @@ struct Button {
 
 Obstacle obstacles[NUM_OBSTACLES];
 Player players[NUM_PLAYERS];
+int playerStarts[NUM_PLAYERS];
 
 int winner = -1;
-boolean gameOver = false;
-boolean gameBegun = false;
+//boolean gameOver = false;
+//boolean gameBegun = false;
+#define STATE_INTRO 0
+#define STATE_PREGAME 1
+#define STATE_GAME 2
+#define STATE_GAMEOVER 3
+int gameState = STATE_INTRO;
 
 int deathAnimStepTime = 150;
 
 //maintaining pixels
 char pixel[NUM_COLS][NUM_ROWS];
 char last_sent_grid[NUM_COLS][NUM_ROWS];
+
+//pregame intro
+int pregameStep = 0;
+int nextPregameStepTime = 0;
 
 //using serial for a debug display in processing
 String debug_display_buffer = "";       //buffer size maxes out at 64 bytes, our messages can be up to 8 chars long, so max of 8 pixels per message
@@ -96,8 +106,7 @@ void setup() {
 
   randomSeed(analogRead(0));
 
-  gameOver = false;
-  gameBegun = false;
+  gameState = STATE_INTRO;
   winner = -1;
 
   //default states
@@ -106,11 +115,9 @@ void setup() {
   //setup players
   players[0].identifier = '0';
   players[1].identifier = '1';
-  //  for (int i = 0; i < NUM_PLAYERS; i++) {
-  //    //players[i] = new Player();
-  //
-  //    //player position etc handled in reset()
-  //  }
+  
+  playerStarts[0] = 3;
+  playerStarts[1] = 23;
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -217,9 +224,10 @@ void reset() {
     Serial.println("game start");
   }
 
-  gameOver = false;
-  gameBegun = true;
+  gameState = STATE_PREGAME;
+  
   for (int i = 0; i < NUM_PLAYERS; i++) {
+    players[i].x = playerStarts[i];
     if (NUM_PLAYERS == 2) players[i].y = i * (NUM_ROWS - 1); //put on opposite side
     else                  players[i].y = i; //use its own lane
     players[i].speed = startSpeed;
@@ -229,9 +237,6 @@ void reset() {
     players[i].deathAnimStep = 0;
   }
 
-  //set player starting positions
-  players[0].x = 3;
-  players[1].x = 23;
 
   //run through obstacles and randomize them
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -246,9 +251,10 @@ void reset() {
 void loop() {
   checkInput();
 
-  if (!gameBegun)      displayIntro();
-  else if (!gameOver)  runGame();
-  else                 displayWinner(winner);
+  if (gameState == STATE_INTRO)          displayIntro();
+  else if (gameState == STATE_PREGAME)   displayPregame();
+  else if (gameState == STATE_GAME)      runGame();
+  else if (gameState == STATE_GAMEOVER)  displayWinner(winner);
 
   //displaying the thing
   setLEDs();
@@ -262,8 +268,8 @@ void loop() {
 void runGame() {
 
   winner = checkWinners(); //winner remains -1 if no winner
-  if (winner != -1 && !gameOver && !checkDeathAnimations()){
-    gameOver = true;
+  if (winner != -1 && gameState == STATE_GAME && !checkDeathAnimations()){
+    gameState = STATE_GAMEOVER;
     //if the game just ended, lock the buttons for a bit
     button_lock_timer = millis() + button_lock_time;
     if (use_debug_serial_display){
@@ -412,11 +418,12 @@ void button_pressed(int id) {
     //return; //kill me
   }
   //reset the game if we're not playing
-  if (!gameBegun) {
+  if (gameState == STATE_INTRO) {
     reset();
-  }
-  else if (gameOver){
-    gameBegun = false;
+    pregameStep = 0;
+    nextPregameStepTime = millis();
+  } else if (gameState == STATE_GAMEOVER) {
+    gameState = STATE_INTRO;
     button_lock_timer = millis() + button_lock_time;
   }
 
@@ -518,6 +525,66 @@ void displayIntro() {
     }
   }
 }
+
+void displayPregame() {
+
+  //time to advance
+  if (millis() > nextPregameStepTime) {
+    nextPregameStepTime = millis() + 50;
+    pregameStep++;
+  }
+
+  //blank the board
+  resetMatrix();
+
+  //show the characters coming in with arrows
+  int trackPos = (NUM_COLS/2) - pregameStep;
+  if (trackPos < 0)  trackPos = 0;
+  for (int p=0; p<NUM_PLAYERS; p++) {
+    for (int i = 0; i < trackPos; i++) {
+      int x1 = (playerStarts[p] + i) % NUM_COLS;
+      int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
+      
+      if (i != trackPos - 3){
+        pixel[x1][players[p].y] = players[p].identifier;
+        pixel[x2][players[p].y] = players[p].identifier;
+      }
+
+      //arrow tail
+      if (i == trackPos-1) {
+        int x1Shift = (x1+1) % NUM_COLS;
+        int x2Shift = (x2-1+NUM_COLS) % NUM_COLS;
+        pixel[x1][players[p].y-1] = players[p].identifier;
+        pixel[x1Shift][players[p].y-1] = players[p].identifier;
+        pixel[x1Shift][players[p].y+1] = players[p].identifier;
+        pixel[x1][players[p].y+1] = players[p].identifier;
+
+        pixel[x2][players[p].y-1] = players[p].identifier;
+        pixel[x2Shift][players[p].y-1] = players[p].identifier;
+        pixel[x2Shift][players[p].y+1] = players[p].identifier;
+        pixel[x2][players[p].y+1] = players[p].identifier;
+      }
+    }
+  }
+
+  //blink the game
+  if (pregameStep > NUM_COLS/2) {
+    if (pregameStep % 4 < 2) {
+      displayGame();
+    }
+
+    //make sure the players are shown
+    for (int i=0; i<NUM_PLAYERS; i++) {
+      pixel[players[i].x][players[i].y] = players[i].identifier;
+    }
+  }
+
+  //after a bit, go to the game
+  if (pregameStep == NUM_COLS/2 + 20) {
+    gameState = STATE_GAME;
+  }
+}
+
 void displayWinner(int player) {
   int mod = (millis() / 50) % NUM_COLS;
   //println("PLAYER " + player + " WON!!!" + " mod=" + mod);
@@ -528,7 +595,6 @@ void displayWinner(int player) {
       if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = '-';
     }
   }
-  gameOver = true;
 }
 
 
