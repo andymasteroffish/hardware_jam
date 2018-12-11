@@ -17,3 +17,4 @@ AltCtrlGDC: Circumnavigators
 
 
 //Optional: if you have any other material/links for the judges, (website, design images, etc) please include here:
+	Note: The current version seen in the video is a prototype. The final version will have a custom housing.
