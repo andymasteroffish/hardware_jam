@@ -34,6 +34,9 @@ struct Player {
   int nextMoveTime;   //when the next move will occur
   int dir;            //1 is normal, -1 is reverse
   char identifier;
+  unsigned char r;
+  unsigned char g;
+  unsigned char b;
 
   //death animation
   boolean doingDeathAnim;
@@ -113,8 +116,15 @@ void setup() {
   resetMatrix();
 
   //setup players
-  players[0].identifier = '0';
-  players[1].identifier = '1';
+  players[0].identifier = 0;
+  players[0].r = 0;
+  players[0].g = 0;
+  players[0].b = 136;
+  
+  players[1].identifier = 10;
+  players[1].r = 136;
+  players[1].g = 136;
+  players[1].b = 0;
   
   playerStarts[0] = 3;
   playerStarts[1] = 23;
@@ -306,7 +316,7 @@ void advancePlayer(int p) {
       boolean hitMe = false;
       for (int r = 0; r < NUM_ROWS; r++) {
         if (obstacles[i].onRows[r] && r == players[p].y) {
-          //this fool hit the obsacle
+          //dis fool hit duh obsacle lolz
           hitMe = true;
         }
       }
@@ -328,7 +338,7 @@ void doObstacleEffect(int p, int o) {
   //accelerate
   if (action == 'a') {
     players[p].speed *= speedMult;
-    //keep it possitive
+    //keep it positive
     if (players[p].speed < 10)    players[p].speed = 10;
   }
 
@@ -454,6 +464,13 @@ void displayGame() {
   //add the players
   for (int i = 0; i < NUM_PLAYERS; i++) {
     pixel[players[i].x][players[i].y] = players[i].identifier;
+
+    //Trails
+    //im not sure what the speed range is like, so just doing generic trails manually for now
+    //also wont show right if it shifts, but we could store the previous positions if it feels weird
+    pixel[players[i].x - dir][players[i].y] = players[i].identifier + 4; 
+    pixel[players[i].x - dir * 2][players[i].y] = players[i].identifier + 6; 
+    pixel[players[i].x - dir * 3][players[i].y] = players[i].identifier + 9; 
   }
 
   //death animations
@@ -466,20 +483,23 @@ void displayGame() {
       //get the points
       int x_left = (players[i].x - dist + NUM_COLS) % NUM_COLS; //these need to loop
       int x_right = (players[i].x + dist) % NUM_COLS;           //these need to loop
-      int y_top = players[i].y - dist;
-      int y_bot = players[i].y + dist;
+      int y_top = players[i].y - dist + players[i].deathAnimStep; //adding deathanimstep is like gravity? might be too fast
+      int y_bot = players[i].y + dist + players[i].deathAnimStep;
+      int y_mid = players[i].y + players[i].deathAnimStep; 
 
       //add them to the pixels (last few frames are blank)
       if (players[i].deathAnimStep < 3) {
         //diagonal
-        if (y_top >= 0)        pixel[x_left][y_top] = players[i].identifier;
-        if (y_bot < NUM_ROWS)  pixel[x_left][y_bot] = players[i].identifier;
-        if (y_top >= 0)        pixel[x_right][y_top] = players[i].identifier;
-        if (y_bot < NUM_ROWS)  pixel[x_right][y_bot] = players[i].identifier;
+        if (y_top >= 0)        pixel[x_left][y_top] = players[i].identifier + players[i].deathAnimStep; //add the step # so player death particles become 10% weaker each step
+        if (y_bot < NUM_ROWS)  pixel[x_left][y_bot] = players[i].identifier + players[i].deathAnimStep;
+        if (y_top >= 0)        pixel[x_right][y_top] = players[i].identifier + players[i].deathAnimStep;
+        if (y_bot < NUM_ROWS)  pixel[x_right][y_bot] = players[i].identifier + players[i].deathAnimStep;
 
         //horizontal
-        pixel[x_left][players[i].y] = players[i].identifier;
-        pixel[x_right][players[i].y] = players[i].identifier;
+        if (y_mid >= 0 && y_mid < NUM_ROWS) {
+          pixel[x_left][players[i].y] = players[i].identifier + players[i].deathAnimStep;
+          pixel[x_right][players[i].y] = players[i].identifier + players[i].deathAnimStep;
+        }
       }
 
       //time to update?
@@ -615,16 +635,30 @@ void setLEDs() {
       //chekc if this pixel has changed
       if (pixel[x][y] != last_sent_grid[x][y]) {
         char col_char = pixel[x][y];
-        uint32_t color = 0x000000;  //'-'
+        uint32_t color = 0x000000;  //'-' (ascii 45)
 
-        if (col_char == 'b') color = 0x004400;  //blocked
-        if (col_char == 's') color = 0x444444;  //shifter
-        if (col_char == 'a') color = 0x440000;  //accelerator
-        if (col_char == 'r') color = 0x004444;  //reverse
+        if (col_char == 'b') color = 0x004400;  //blocked (ascii 98)
+        if (col_char == 's') color = 0x444444;  //shifter (ascii 115)
+        if (col_char == 'a') color = 0x440000;  //accelerator (ascii 97) 
+        if (col_char == 'r') color = 0x004444;  //reverse (ascii 114)
 
-        if (col_char == '0') color = 0x000088;  //p1
-        if (col_char == '1') color = 0x888800;  //p2
-        if (col_char == '2') color = 0x000044;  //p3
+        if (col_char / 10 == 0) { //p1
+           float pct = (10 - col_char % 10) / 10;
+           color = pix0.Color(players[0].r * pct, players[0].g * pct, players[0].b * pct); //just using the dotstar class to store the color
+        }
+        if (col_char / 10 == 1) { //p2
+           float pct = (10 - col_char % 10) / 10;
+           color = pix0.Color(players[1].r * pct, players[1].g * pct, players[1].b * pct);
+        }
+        
+        //if (col_char / 10 == 2) { //p3
+        //   float pct = (10 - col_char % 10) / 10;
+        //   color = pix0.Color(players[2].r * pct, players[2].g * pct, players[2].b * pct);
+        //}
+        
+        //if (col_char == '0') color = 0x000088;  //p1
+        //if (col_char == '1') color = 0x888800;  //p2
+        //if (col_char == '2') color = 0x000044;  //p3
 
 
         if (y == 0) pix0.setPixelColor(x, color);
