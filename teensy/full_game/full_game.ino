@@ -661,14 +661,14 @@ void setLEDs() {
         //if (col_char == '2') color = 0x000044;  //p3
 
 
-        if (y == 0) pix0.setPixelColor(x, color);
-        if (y == 1) pix1.setPixelColor(x, color);
-        if (y == 2) pix2.setPixelColor(x, color);
+        if (y == 0) pix0.setPixelColor(NUM_COLS-1-x, color);
+        if (y == 1) pix1.setPixelColor(NUM_COLS-1-x, color);
+        if (y == 2) pix2.setPixelColor(NUM_COLS-1-x, color);
         //row 3 is missed up so we need to skip the first pixel
         if (y == 3) {
-          if (x > 0)  pix3.setPixelColor(x - 1, color);
+          if (x > 0)  pix3.setPixelColor(NUM_COLS-1- (x - 1), color);
         }
-        if (y == 4) pix4.setPixelColor(x, color);
+        if (y == 4) pix4.setPixelColor(NUM_COLS-1-x, color);
 
         anythingChanged = true;
 
