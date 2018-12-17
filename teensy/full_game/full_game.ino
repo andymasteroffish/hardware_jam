@@ -9,7 +9,7 @@
 
 #define LETTER_WIDTH 5
 
-boolean use_debug_serial_display = true;
+boolean use_debug_serial_display = false;
 
 //game values
 int startSpeed = 400;  //measured in millis between steps
@@ -144,7 +144,7 @@ void setup() {
   obstacles[1].action = 'b';//'s';
   obstacles[2].action = 'a';
   obstacles[3].action = 'b';//'s';
-  obstacles[4].action = 'r';
+  obstacles[4].action = 'b';
   obstacles[5].action = 'b';
   obstacles[6].action = 'a';
   obstacles[7].action = 'b';//'s';
@@ -290,7 +290,7 @@ void runGame() {
   //update our players
   for (int i = 0; i < NUM_PLAYERS; i++) {
     //is it time to move?
-    if (millis() > players[i].nextMoveTime) {
+    if (millis() > players[i].nextMoveTime && players[i].speed > 0) {
       advancePlayer(i);
       players[i].nextMoveTime = millis() + players[i].speed;
     }
@@ -468,9 +468,9 @@ void displayGame() {
     //Trails
     //im not sure what the speed range is like, so just doing generic trails manually for now
     //also wont show right if it shifts, but we could store the previous positions if it feels weird
-    pixel[players[i].x - dir][players[i].y] = players[i].identifier + 4; 
-    pixel[players[i].x - dir * 2][players[i].y] = players[i].identifier + 6; 
-    pixel[players[i].x - dir * 3][players[i].y] = players[i].identifier + 9; 
+    pixel[players[i].x - players[i].dir][players[i].y] = players[i].identifier + 4; 
+    pixel[players[i].x - players[i].dir * 2][players[i].y] = players[i].identifier + 6; 
+    pixel[players[i].x - players[i].dir * 3][players[i].y] = players[i].identifier + 9; 
   }
 
   //death animations
@@ -535,7 +535,7 @@ void displayIntro() {
     //show the title
     String title_text = "circumnavigators";
     int title_x = NUM_COLS - (millis() / 500) % (title_text.length()*(LETTER_WIDTH+1) + NUM_COLS);
-    printWord(title_text, '1', title_x);
+    printWord(title_text, 'r', title_x);
   }
 
   //debug display with fewer changing pixels
@@ -643,11 +643,11 @@ void setLEDs() {
         if (col_char == 'r') color = 0x004444;  //reverse (ascii 114)
 
         if (col_char / 10 == 0) { //p1
-           float pct = (10 - col_char % 10) / 10;
+           float pct = (10.0 - col_char % 10) / 10.0;
            color = pix0.Color(players[0].r * pct, players[0].g * pct, players[0].b * pct); //just using the dotstar class to store the color
         }
         if (col_char / 10 == 1) { //p2
-           float pct = (10 - col_char % 10) / 10;
+           float pct = (10.0 - col_char % 10) / 10.0;
            color = pix0.Color(players[1].r * pct, players[1].g * pct, players[1].b * pct);
         }
         
