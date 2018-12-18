@@ -10,12 +10,18 @@
 #define LETTER_WIDTH 5
 
 boolean use_debug_serial_display = false;
-boolean debug_skip_intro = true;
+boolean debug_skip_intro = false;
 boolean debug_no_death = false;
 
 //game values
-int startSpeed = 200;  //measured in millis between steps
+int startSpeed = 230;  //measured in millis between steps
 float speedMult = 0.75;  //the closer this is to 0, the faster they'll go
+float slowDownMult = 1.5; //if we have one of the obstacles slow the players down, this is how much it will slow them
+
+//speeding up over time
+int millis_between_speed_up = 1000;
+int next_speed_up_time = 0;
+int speed_up_ammount = 2;//5;
 
 /* obstacles can be any one of the following
   b - blocker
@@ -129,7 +135,7 @@ void setup() {
   players[1].b = 0;
 
   playerStarts[0] = 3;
-  playerStarts[1] = 44;
+  playerStarts[1] = 40;
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -142,9 +148,9 @@ void setup() {
 
   //set the types
   //moving the X values to match the buttons
-  obstacles[0].action = 'a';//'r';
+  obstacles[0].action = 'a';
   obstacles[1].action = 'b';//'s';
-  obstacles[2].action = 'b';//'a';
+  obstacles[2].action = 's';//'a';
   obstacles[3].action = 'b';//'s';
   obstacles[4].action = 'a';
   obstacles[5].action = 'b';
@@ -162,29 +168,24 @@ void setup() {
   obstacles[7].x += 10;
 
   //dpending on the type, turn a few on
-  for (int i = 0; i < NUM_OBSTACLES; i++) {
-    if (obstacles[i].action == 's') {
-      obstacles[i].onRows[0] = true;
-      obstacles[i].onRows[2] = true;
-    }
-    if (obstacles[i].action == 'b') {
-      obstacles[i].onRows[0] = true;
-      obstacles[i].onRows[1] = true;
-
-      //testing
-//      obstacles[i].onRows[2] = true;
-//      obstacles[i].onRows[3] = true;
-//      obstacles[i].onRows[4] = true;
-    }
-    if (obstacles[i].action == 'a') {
-      obstacles[i].onRows[0] = true;
-      obstacles[i].onRows[1] = true;
-    }
-    if (obstacles[i].action == 'r') {
-      obstacles[i].onRows[0] = true;
-      obstacles[i].onRows[3] = true;
-    }
-  }
+//  for (int i = 0; i < NUM_OBSTACLES; i++) {
+//    if (obstacles[i].action == 's') {
+//      obstacles[i].onRows[0] = true;
+//      obstacles[i].onRows[1] = true;
+//    }
+//    if (obstacles[i].action == 'b') {
+//      obstacles[i].onRows[0] = true;
+//      obstacles[i].onRows[1] = true;
+//    }
+//    if (obstacles[i].action == 'a') {
+//      obstacles[i].onRows[0] = true;
+//      obstacles[i].onRows[1] = true;
+//    }
+//    if (obstacles[i].action == 'r') {
+//      obstacles[i].onRows[0] = true;
+//      obstacles[i].onRows[1] = true;
+//    }
+//  }
 
   //buttons
   buttons[0].pin = 17;
@@ -244,6 +245,40 @@ void reset() {
     Serial.println("game start");
   }
 
+  //randomize obstacles (odd numbers are always blockers)
+  for (int i=0; i<NUM_OBSTACLES; i+=2){
+    int rand_val = (int)random(0, 3);
+    if (rand_val == 0) obstacles[i].action = 'a';
+    if (rand_val == 1) obstacles[i].action = 's';
+    if (rand_val == 2) obstacles[i].action = 'r';
+  }
+  //make sure we have at leats one accelerator
+  int rand_obstacle = (int)random(0, 3) * 2;
+  obstacles[rand_obstacle].action = 'a';
+  
+  //set them up
+  for (int i = 0; i < NUM_OBSTACLES; i++) {
+    for (int k=0; k<5; k++){
+      obstacles[i].onRows[k] = false;
+    }
+    if (obstacles[i].action == 's') {
+      obstacles[i].onRows[0] = true;
+      obstacles[i].onRows[1] = true;
+    }
+    if (obstacles[i].action == 'b') {
+      obstacles[i].onRows[0] = true;
+      obstacles[i].onRows[1] = true;
+    }
+    if (obstacles[i].action == 'a') {
+      obstacles[i].onRows[0] = true;
+      obstacles[i].onRows[1] = true;
+    }
+    if (obstacles[i].action == 'r') {
+      obstacles[i].onRows[0] = true;
+      obstacles[i].onRows[1] = true;
+    }
+  }
+
   gameState = STATE_PREGAME;
 
   for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -267,6 +302,8 @@ void reset() {
       shiftObstacle(i);
     }
   }
+
+  next_speed_up_time = millis();
 
 }
 
@@ -305,6 +342,16 @@ void runGame() {
     if (millis() > players[i].nextMoveTime && players[i].speed > 0 && !checkDeathAnimations()) {
       advancePlayer(i);
       players[i].nextMoveTime = millis() + players[i].speed;
+    }
+  }
+
+  //time to speed up?
+  if (millis() > next_speed_up_time && !checkDeathAnimations()){
+    next_speed_up_time = millis() + millis_between_speed_up;
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+      if (players[i].speed > 50){
+        players[i].speed -= speed_up_ammount;
+      }
     }
   }
 
@@ -347,9 +394,11 @@ void doObstacleEffect(int p, int o) {
     killPlayer(p);
   }
 
-  //accelerate
+  //accelerate (or slow down????)
   if (action == 'a') {
     players[p].speed *= speedMult;
+    //trying out slowing the player down!
+    //players[p].speed *= slowDownMult;
     //keep it positive
     if (players[p].speed < 10)    players[p].speed = 10;
   }
@@ -540,7 +589,7 @@ void displayGame() {
 }
 
   void displayIntro() {
-    int mod = (millis() / 600) % NUM_COLS;
+    int mod = (millis() / 400) % NUM_COLS;
     String abc = "-bsar01";
     //println("mod=" + mod);
 
@@ -557,7 +606,7 @@ void displayGame() {
 
       //show the title
       String title_text = "circumnavigators";
-      int title_x = NUM_COLS - (millis() / 500) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
+      int title_x = NUM_COLS - (millis() / 300) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
       printWord(title_text, 'r', title_x);
     }
 
@@ -638,6 +687,10 @@ void displayGame() {
         if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = '-';
       }
     }
+
+     String title_text = "winner";
+      int title_x = NUM_COLS - (millis() / 200) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
+      printWord(title_text,  players[player].identifier, title_x);
   }
 
 
