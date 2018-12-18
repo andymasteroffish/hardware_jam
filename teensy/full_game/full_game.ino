@@ -333,7 +333,7 @@ void doObstacleEffect(int p, int o) {
   char action = obstacles[o].action;
 
   //block
-  if (action == 'b') {
+  if (action == 'b' && players[p].speed != 0) {
     killPlayer(p);
   }
 
