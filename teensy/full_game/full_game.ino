@@ -1,7 +1,7 @@
 #include <Adafruit_DotStar.h>
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 
-#define NUM_COLS 97
+#define NUM_COLS 96
 #define NUM_ROWS 5
 
 #define NUM_OBSTACLES 8
@@ -10,10 +10,12 @@
 #define LETTER_WIDTH 5
 
 boolean use_debug_serial_display = false;
+boolean debug_skip_intro = true;
+boolean debug_no_death = false;
 
 //game values
-int startSpeed = 300;  //measured in millis between steps
-float speedMult = 0.8;  //the closer this is to 0, the faster they'll go
+int startSpeed = 200;  //measured in millis between steps
+float speedMult = 0.75;  //the closer this is to 0, the faster they'll go
 
 /* obstacles can be any one of the following
   b - blocker
@@ -127,7 +129,7 @@ void setup() {
   players[1].b = 0;
 
   playerStarts[0] = 3;
-  playerStarts[1] = 23;
+  playerStarts[1] = 44;
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -140,23 +142,24 @@ void setup() {
 
   //set the types
   //moving the X values to match the buttons
-  obstacles[0].action = 'r';
+  obstacles[0].action = 'a';//'r';
   obstacles[1].action = 'b';//'s';
-  obstacles[2].action = 'a';
+  obstacles[2].action = 'b';//'a';
   obstacles[3].action = 'b';//'s';
-  obstacles[4].action = 'b';
+  obstacles[4].action = 'a';
   obstacles[5].action = 'b';
-  obstacles[6].action = 'a';
+  obstacles[6].action = 'r';//'a';
   obstacles[7].action = 'b';//'s';
 
-  obstacles[0].x = 2;
-  obstacles[1].x += 1;
-  obstacles[2].x += 0;
-  obstacles[3].x += 5;
-  obstacles[4].x += 4;
-  obstacles[5].x += 3;
-  obstacles[6].x += 2;
-  obstacles[7].x += 7;
+  //adjusting them into place
+  obstacles[0].x = 8;
+  obstacles[1].x += 10;
+  obstacles[2].x += 8;
+  obstacles[3].x += 9;
+  obstacles[4].x += 8;
+  obstacles[5].x += 10;
+  obstacles[6].x += 8;
+  obstacles[7].x += 10;
 
   //dpending on the type, turn a few on
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -167,7 +170,11 @@ void setup() {
     if (obstacles[i].action == 'b') {
       obstacles[i].onRows[0] = true;
       obstacles[i].onRows[1] = true;
-      //obstacles[i].onRows[2] = true;
+
+      //testing
+//      obstacles[i].onRows[2] = true;
+//      obstacles[i].onRows[3] = true;
+//      obstacles[i].onRows[4] = true;
     }
     if (obstacles[i].action == 'a') {
       obstacles[i].onRows[0] = true;
@@ -180,28 +187,28 @@ void setup() {
   }
 
   //buttons
-  buttons[0].pin = 0;
+  buttons[0].pin = 17;
   buttons[0].key = '0';
 
-  buttons[1].pin = 1;
+  buttons[1].pin = 3;
   buttons[1].key = '1';
 
   buttons[2].pin = 2;
   buttons[2].key = '2';
 
-  buttons[3].pin = 3;
+  buttons[3].pin = 1;
   buttons[3].key = '3';
 
-  buttons[4].pin = 17;
+  buttons[4].pin = 0;
   buttons[4].key = '4';
 
-  buttons[5].pin = 18;
+  buttons[5].pin = 20;
   buttons[5].key = '5';
 
   buttons[6].pin = 19;
   buttons[6].key = '6';
 
-  buttons[7].pin = 20;
+  buttons[7].pin = 18;
   buttons[7].key = '7';
 
   for (int i = 0; i < NUM_BUTTONS; i++) {
@@ -226,7 +233,10 @@ void setup() {
   pix4.begin();
   pix4.show();
 
-  //reset();  //testing
+  if (debug_skip_intro){
+    reset();  //testing
+    gameState = STATE_GAME;
+  }
 }
 
 void reset() {
@@ -292,7 +302,7 @@ void runGame() {
   //update our players
   for (int i = 0; i < NUM_PLAYERS; i++) {
     //is it time to move?
-    if (millis() > players[i].nextMoveTime && players[i].speed > 0) {
+    if (millis() > players[i].nextMoveTime && players[i].speed > 0 && !checkDeathAnimations()) {
       advancePlayer(i);
       players[i].nextMoveTime = millis() + players[i].speed;
     }
@@ -333,7 +343,7 @@ void doObstacleEffect(int p, int o) {
   char action = obstacles[o].action;
 
   //block
-  if (action == 'b' && players[p].speed != 0) {
+  if (action == 'b' && players[p].speed != 0 && !checkDeathAnimations() && !debug_no_death) {
     killPlayer(p);
   }
 
@@ -425,8 +435,10 @@ void checkInput() {
 
 void button_pressed(int id) {
   if (!use_debug_serial_display) {
-    Serial.print("pressed ");
-    Serial.println(id);
+//    Serial.print("pressed ");
+//    Serial.println(id);
+//    Serial.print("pin ");
+//    Serial.println(buttons[id].pin);
     //return; //kill me
   }
   //reset the game if we're not playing
@@ -674,15 +686,11 @@ void displayGame() {
           //if (col_char == '2') color = 0x000044;  //p3
 
 
-          if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x, color);
+          if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , color);
           if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x -1, color);
-          if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x, color);
-          //row 3 is messed up so we need to skip the first pixel
-          if (y == 3) {
-            pix3.setPixelColor(NUM_COLS - 1 - (x), color);
-          }
-          
-          if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x, color);
+          if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , color);
+          if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , color);
+          if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , color);
 
           anythingChanged = true;
 
