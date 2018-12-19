@@ -606,7 +606,7 @@ void displayGame() {
 
       //show the title
       String title_text = "circumnavigators";
-      int title_x = NUM_COLS - (millis() / 300) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
+      int title_x = NUM_COLS - (millis() / 70) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
       printWord(title_text, 'r', title_x);
     }
 
@@ -689,7 +689,7 @@ void displayGame() {
     }
 
      String title_text = "winner";
-      int title_x = NUM_COLS - (millis() / 200) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
+      int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
       printWord(title_text,  players[player].identifier, title_x);
   }
 
