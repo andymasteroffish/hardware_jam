@@ -188,28 +188,28 @@ void setup() {
 //  }
 
   //buttons
-  buttons[0].pin = 17;
+  buttons[0].pin = 3;
   buttons[0].key = '0';
 
-  buttons[1].pin = 3;
+  buttons[1].pin = 17;
   buttons[1].key = '1';
 
-  buttons[2].pin = 2;
+  buttons[2].pin = 18;
   buttons[2].key = '2';
 
-  buttons[3].pin = 1;
+  buttons[3].pin = 19;
   buttons[3].key = '3';
 
-  buttons[4].pin = 0;
+  buttons[4].pin = 20;
   buttons[4].key = '4';
 
-  buttons[5].pin = 20;
+  buttons[5].pin = 0;
   buttons[5].key = '5';
 
-  buttons[6].pin = 19;
+  buttons[6].pin = 1;
   buttons[6].key = '6';
 
-  buttons[7].pin = 18;
+  buttons[7].pin = 2;
   buttons[7].key = '7';
 
   for (int i = 0; i < NUM_BUTTONS; i++) {
@@ -235,7 +235,7 @@ void setup() {
   pix4.show();
 
   if (debug_skip_intro){
-    reset();  //testing
+    reset();  
     gameState = STATE_GAME;
   }
 }
@@ -484,10 +484,10 @@ void checkInput() {
 
 void button_pressed(int id) {
   if (!use_debug_serial_display) {
-//    Serial.print("pressed ");
-//    Serial.println(id);
-//    Serial.print("pin ");
-//    Serial.println(buttons[id].pin);
+    Serial.print("pressed ");
+    Serial.println(id);
+    Serial.print("pin ");
+    Serial.println(buttons[id].pin);
     //return; //kill me
   }
   //reset the game if we're not playing
