@@ -561,7 +561,7 @@ void displayGame() {
       //sometime splayer x position is garbage data
       //this is a sloppy solution, but it was causing crashes and I need to go home soon
       if (players[i].x < 0 || players[i].x >= NUM_COLS){
-        players[i].x = 0;
+        players[i].x = playerStarts[i];
       }
       
 //      Serial.println("this player x");
