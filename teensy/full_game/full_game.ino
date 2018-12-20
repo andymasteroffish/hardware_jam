@@ -135,7 +135,7 @@ void setup() {
   players[1].b = 0;
 
   playerStarts[0] = 3;
-  playerStarts[1] = 40;
+  playerStarts[1] = 38;
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -158,11 +158,11 @@ void setup() {
   obstacles[7].action = 'b';//'s';
 
   //adjusting them into place
-  obstacles[0].x = 8;
+  obstacles[0].x = 9;
   obstacles[1].x += 10;
   obstacles[2].x += 8;
-  obstacles[3].x += 9;
-  obstacles[4].x += 8;
+  obstacles[3].x += 10;
+  obstacles[4].x += 9;
   obstacles[5].x += 10;
   obstacles[6].x += 8;
   obstacles[7].x += 10;
