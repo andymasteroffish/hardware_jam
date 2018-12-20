@@ -6,6 +6,7 @@
 
 #define NUM_OBSTACLES 8
 #define NUM_PLAYERS 2
+#define MAX_TRAILS 3
 
 #define LETTER_WIDTH 5
 
@@ -45,6 +46,7 @@ struct Player {
   unsigned char r;
   unsigned char g;
   unsigned char b;
+  int pX[MAX_TRAILS];
 
   //death animation
   boolean doingDeathAnim;
@@ -72,6 +74,9 @@ int winner = -1;
 #define STATE_GAME 2
 #define STATE_GAMEOVER 3
 int gameState = STATE_INTRO;
+
+int max_game_over_time = 15000;
+int end_game_over_time = 0;
 
 int deathAnimStepTime = 150;
 
@@ -289,6 +294,7 @@ void reset() {
 
   for (int i = 0; i < NUM_PLAYERS; i++) {
     players[i].x = playerStarts[i];
+    for (int j = 0; j < MAX_TRAILS; j++) players[i].pX[j] = players[i].x;
     //if (NUM_PLAYERS == 2) players[i].y = i * (NUM_ROWS - 1); //put on opposite side
     //else                  players[i].y = i; //use its own lane
     players[0].y = 1;
@@ -335,6 +341,7 @@ void runGame() {
   winner = checkWinners(); //winner remains -1 if no winner
   if (winner != -1 && gameState == STATE_GAME && !checkDeathAnimations()) {
     gameState = STATE_GAMEOVER;
+    end_game_over_time = millis() + max_game_over_time;
     //if the game just ended, lock the buttons for a bit
     button_lock_timer = millis() + button_lock_time;
     if (use_debug_serial_display) {
@@ -366,6 +373,12 @@ void runGame() {
 }
 
 void advancePlayer(int p) {
+  //store the old positions
+  for (int k = MAX_TRAILS - 1; k > 1; k--)
+    players[p].pX[k] = players[p].pX[k - 1];
+
+  players[p].pX[0] = players[p].x;
+  
   //move
   players[p].x += players[p].dir;
   if (players[p].x == NUM_COLS) {
@@ -528,18 +541,34 @@ void displayGame() {
 
       //getting the trial positions here to be sure that they loop correctly
       //previously these were causing index out of bounds errors
+      //Updated: hardcoded trails for time ... fix later to make dynamic
       int trail_x_1 = (players[i].x - players[i].dir     + NUM_COLS) % NUM_COLS;
       int trail_x_2 = (players[i].x - players[i].dir * 2 + NUM_COLS) % NUM_COLS;
       int trail_x_3 = (players[i].x - players[i].dir * 3 + NUM_COLS) % NUM_COLS;
+      int trail_x_4 = (players[i].x - players[i].dir * 4 + NUM_COLS) % NUM_COLS;
 
     if (!players[i].doingDeathAnim) {
       //Serial.println("trails");
       //Trails
       //im not sure what the speed range is like, so just doing generic trails manually for now
       //also wont show right if it shifts, but we could store the previous positions if it feels weird
-      pixel[trail_x_1][players[i].y] = players[i].identifier + 4;
-      pixel[trail_x_2][players[i].y] = players[i].identifier + 6;
-      pixel[trail_x_3][players[i].y] = players[i].identifier + 9;
+
+      //starter trail
+      if (players[i].speed > startSpeed * speedMult){
+        pixel[trail_x_1][players[i].y] = players[i].identifier + 8;
+        //pixel[trail_x_2][players[i].y] = players[i].identifier + 8;
+      } else if (players[i].speed <= startSpeed * speedMult){// && players[i].speed >= startSpeed * (speedMult * 2)) {
+        //mid trail
+        pixel[trail_x_1][players[i].y] = players[i].identifier + 3;
+        pixel[trail_x_1][players[i].y] = players[i].identifier + 5;
+        pixel[trail_x_2][players[i].y] = players[i].identifier + 7;
+      } /*else{
+        //fast trail
+        pixel[trail_x_1][players[i].y] = players[i].identifier + 4;
+        pixel[trail_x_2][players[i].y] = players[i].identifier + 6;
+        pixel[trail_x_3][players[i].y] = players[i].identifier + 7;
+        pixel[trail_x_4][players[i].y] = players[i].identifier + 8;
+      }*/
     } else {
       //Serial.println("dead trails");
       pixel[trail_x_1][players[i].y] = '-';
@@ -717,6 +746,11 @@ void displayGame() {
      String title_text = "winner";
       int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
       printWord(title_text,  players[player].identifier, title_x);
+
+      if (millis() > end_game_over_time){
+        gameState = STATE_INTRO;
+        button_lock_timer = millis() + button_lock_time;
+      }
   }
 
 
