@@ -331,7 +331,6 @@ void loop() {
 }
 
 void runGame() {
-  Serial.println("run game");
 
   winner = checkWinners(); //winner remains -1 if no winner
   if (winner != -1 && gameState == STATE_GAME && !checkDeathAnimations()) {
