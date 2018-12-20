@@ -135,7 +135,7 @@ void setup() {
   players[1].b = 0;
 
   playerStarts[0] = 3;
-  playerStarts[1] = 38;
+  playerStarts[1] = 50;
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -247,6 +247,8 @@ void reset() {
 
   //randomize obstacles (odd numbers are always blockers)
   for (int i=0; i<NUM_OBSTACLES; i+=2){
+//    String this_massage = "set obstacle" + String(i);
+//    Serial.print(this_massage);
     int rand_val = (int)random(0, 3);
     if (rand_val == 0) obstacles[i].action = 'a';
     if (rand_val == 1) obstacles[i].action = 's';
@@ -254,7 +256,11 @@ void reset() {
   }
   //make sure we have at leats one accelerator
   int rand_obstacle = (int)random(0, 3) * 2;
+//  String another_massage = "set obstacle" + String(rand_obstacle);
+//  Serial.print(another_massage);
   obstacles[rand_obstacle].action = 'a';
+
+  String ("done setting obstacles");
   
   //set them up
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -325,6 +331,7 @@ void loop() {
 }
 
 void runGame() {
+  Serial.println("run game");
 
   winner = checkWinners(); //winner remains -1 if no winner
   if (winner != -1 && gameState == STATE_GAME && !checkDeathAnimations()) {
@@ -484,9 +491,9 @@ void checkInput() {
 
 void button_pressed(int id) {
   if (!use_debug_serial_display) {
-    Serial.print("pressed ");
-    Serial.println(id);
-    Serial.print("pin ");
+//    Serial.print("pressed ");
+//    Serial.println(id);
+    Serial.print("button pin ");
     Serial.println(buttons[id].pin);
     //return; //kill me
   }
@@ -514,20 +521,31 @@ void shiftObstacle(int id) {
 
 void displayGame() {
   resetMatrix();
-
+  //Serial.println("doing display");
   //do the player trails before the obstacles
   for (int i = 0; i < NUM_PLAYERS; i++) {
+//      Serial.println("trails for player:");
+//      Serial.println(i);
+
+      //getting the trial positions here to be sure that they loop correctly
+      //previously these were causing index out of bounds errors
+      int trail_x_1 = (players[i].x - players[i].dir     + NUM_COLS) % NUM_COLS;
+      int trail_x_2 = (players[i].x - players[i].dir * 2 + NUM_COLS) % NUM_COLS;
+      int trail_x_3 = (players[i].x - players[i].dir * 3 + NUM_COLS) % NUM_COLS;
+
     if (!players[i].doingDeathAnim) {
+      //Serial.println("trails");
       //Trails
       //im not sure what the speed range is like, so just doing generic trails manually for now
       //also wont show right if it shifts, but we could store the previous positions if it feels weird
-      pixel[players[i].x - players[i].dir][players[i].y] = players[i].identifier + 4;
-      pixel[players[i].x - players[i].dir * 2][players[i].y] = players[i].identifier + 6;
-      pixel[players[i].x - players[i].dir * 3][players[i].y] = players[i].identifier + 9;
+      pixel[trail_x_1][players[i].y] = players[i].identifier + 4;
+      pixel[trail_x_2][players[i].y] = players[i].identifier + 6;
+      pixel[trail_x_3][players[i].y] = players[i].identifier + 9;
     } else {
-      pixel[players[i].x - players[i].dir][players[i].y] = '-';
-      pixel[players[i].x - players[i].dir * 2][players[i].y] = '-';
-      pixel[players[i].x - players[i].dir * 3][players[i].y] = '-';
+      //Serial.println("dead trails");
+      pixel[trail_x_1][players[i].y] = '-';
+      pixel[trail_x_2][players[i].y] = '-';
+      pixel[trail_x_3][players[i].y] = '-';
     }
 
     //add the obstacles
@@ -541,6 +559,14 @@ void displayGame() {
 
     //add the players over them
     for (int i = 0; i < NUM_PLAYERS; i++) {
+      //sometime splayer x position is garbage data
+      //this is a sloppy solution, but it was causing crashes and I need to go home soon
+      if (players[i].x < 0 || players[i].x >= NUM_COLS){
+        players[i].x = 0;
+      }
+      
+//      Serial.println("this player x");
+//      Serial.println(players[i].x);
       if (!players[i].doingDeathAnim)   pixel[players[i].x][players[i].y] = players[i].identifier; //full power
       else pixel[players[i].x][players[i].y] = '-';
     }
@@ -548,7 +574,6 @@ void displayGame() {
     //death animations
     for (int i = 0; i < NUM_PLAYERS; i++) {
       if (players[i].doingDeathAnim == true) {
-
         //how far to go
         int dist = 1 + players[i].deathAnimStep;
 
@@ -619,7 +644,6 @@ void displayGame() {
   }
 
   void displayPregame() {
-
     //time to advance
     if (millis() > nextPregameStepTime) {
       nextPregameStepTime = millis() + 50;
@@ -660,8 +684,10 @@ void displayGame() {
     }
 
     //blink the game
+    //Serial.println("blink");
     if (pregameStep > NUM_COLS / 2) {
       if (pregameStep % 4 < 2) {
+        //Serial.println("display");
         displayGame();
       }
 
@@ -673,6 +699,7 @@ void displayGame() {
 
     //after a bit, go to the game
     if (pregameStep == NUM_COLS / 2 + 20) {
+      Serial.println("go to game");
       gameState = STATE_GAME;
     }
   }
