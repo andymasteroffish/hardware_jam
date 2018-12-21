@@ -75,6 +75,7 @@ int winner = -1;
 #define STATE_GAMEOVER 3
 int gameState = STATE_INTRO;
 
+//timing out game over
 int max_game_over_time = 15000;
 int end_game_over_time = 0;
 
@@ -140,7 +141,7 @@ void setup() {
   players[1].b = 0;
 
   playerStarts[0] = 3;
-  playerStarts[1] = 50;
+  playerStarts[1] = 23;
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
