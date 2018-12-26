@@ -226,15 +226,17 @@ boolean letter_here[NUM_ROWS][LETTER_WIDTH] = {   {true, false, false, false, fa
 };
 
 
-
-void printWord(String word, char col, int start_x) {
+void printWord(String word, char col, int start_x){
+  printWord(word, col, star_x, false);
+}
+void printWord(String word, char col, int start_x, bool wrap) {
   int cur_x = start_x;
   for (int i = 0; i < word.length(); i++) {
-    printLetter(word.charAt(i), col, cur_x);
+    printLetter(word.charAt(i), col, cur_x, wrap);
     cur_x += LETTER_WIDTH + 1;
   }
 }
-void printLetter(char thisChar, char col, int start_x) {
+void printLetter(char thisChar, char col, int start_x, bool wrap) {
   boolean letter_grid[NUM_ROWS][LETTER_WIDTH];
   switch (thisChar) {
     case '1':
@@ -340,8 +342,10 @@ void printLetter(char thisChar, char col, int start_x) {
   for (int i = -1; i < LETTER_WIDTH + 1; i++) {
     for (int y = 0; y < NUM_ROWS; y++) {
       int x = start_x + i;
-      //while (x < 0)  x += NUM_COLS;    //in case it is negative
-      //x = x % NUM_COLS;                //in case it is larger than cols
+      if (wrap){
+        while (x < 0)  x += NUM_COLS;    //in case it is negative
+        x = x % NUM_COLS;                //in case it is larger than cols
+      }
       //the far right column is blank
       if (x >= 0 && x < NUM_COLS) {
         if (i == -1 || i == LETTER_WIDTH) {

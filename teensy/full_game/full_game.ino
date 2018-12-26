@@ -5,7 +5,7 @@
 #define NUM_ROWS 5
 
 #define NUM_OBSTACLES 8
-#define NUM_PLAYERS 2
+#define NUM_PLAYERS 3
 #define MAX_TRAILS 3
 
 #define LETTER_WIDTH 5
@@ -140,8 +140,14 @@ void setup() {
   players[1].g = 136;
   players[1].b = 0;
 
+  players[2].identifier = 20;
+  players[2].r = 0;
+  players[2].g = 136;
+  players[2].b = 136;
+
   playerStarts[0] = 3;
   playerStarts[1] = 23;
+  playerStarts[2] = 46;
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -293,13 +299,15 @@ void reset() {
 
   gameState = STATE_PREGAME;
 
+  players[0].y = 1;
+  players[1].y = 2;//3;
+  players[2].y = 3;
+    
   for (int i = 0; i < NUM_PLAYERS; i++) {
     players[i].x = playerStarts[i];
     for (int j = 0; j < MAX_TRAILS; j++) players[i].pX[j] = players[i].x;
     //if (NUM_PLAYERS == 2) players[i].y = i * (NUM_ROWS - 1); //put on opposite side
     //else                  players[i].y = i; //use its own lane
-    players[0].y = 1;
-    players[1].y = 3;
     players[i].speed = startSpeed;
     players[i].dir = 1;
 
@@ -650,7 +658,7 @@ void displayGame() {
     //normal display
     if (!use_debug_serial_display) {
 
-      //flahsing
+      //flashing
       for (int y = 0; y < NUM_ROWS; y++) {
         for (int x = 0; x < NUM_COLS; x++) {
           int loc = x + mod + y * NUM_COLS;
@@ -745,8 +753,9 @@ void displayGame() {
     }
 
      String title_text = "winner";
-      int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
-      printWord(title_text,  players[player].identifier, title_x);
+      //int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
+      int title_x = NUM_COLS - (millis() / 100) %  NUM_COLS;
+      printWord(title_text,  players[player].identifier, title_x, true);
 
       if (millis() > end_game_over_time){
         gameState = STATE_INTRO;
@@ -790,10 +799,10 @@ void displayGame() {
             color = pix0.Color(players[1].r * pct, players[1].g * pct, players[1].b * pct);
           }
 
-          //if (col_char / 10 == 2) { //p3
-          //   float pct = (10 - col_char % 10) / 10;
-          //   color = pix0.Color(players[2].r * pct, players[2].g * pct, players[2].b * pct);
-          //}
+          if (col_char / 10 == 2) { //p3
+             float pct = (10.0 - col_char % 10.0) / 10.0;
+             color = pix0.Color(players[2].r * pct, players[2].g * pct, players[2].b * pct);
+          }
 
           //if (col_char == '0') color = 0x000088;  //p1
           //if (col_char == '1') color = 0x888800;  //p2
