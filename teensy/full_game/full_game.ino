@@ -141,13 +141,13 @@ void setup() {
   players[1].b = 0;
 
   players[2].identifier = 20;
-  players[2].r = 0;
-  players[2].g = 136;
-  players[2].b = 136;
+  players[2].r = 50;//80;//0;
+  players[2].g = 200;//255;
+  players[2].b = 0;//136;
 
   playerStarts[0] = 3;
-  playerStarts[1] = 23;
-  playerStarts[2] = 46;
+  playerStarts[1] = 15;
+  playerStarts[2] = 30;
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -545,8 +545,7 @@ void displayGame() {
   //Serial.println("doing display");
   //do the player trails before the obstacles
   for (int i = 0; i < NUM_PLAYERS; i++) {
-//      Serial.println("trails for player:");
-//      Serial.println(i);
+    
 
       //getting the trial positions here to be sure that they loop correctly
       //previously these were causing index out of bounds errors
@@ -556,7 +555,7 @@ void displayGame() {
       int trail_x_3 = (players[i].x - players[i].dir * 3 + NUM_COLS) % NUM_COLS;
       int trail_x_4 = (players[i].x - players[i].dir * 4 + NUM_COLS) % NUM_COLS;
 
-    if (!players[i].doingDeathAnim) {
+    if (!players[i].doingDeathAnim && players[i].speed != 0) {
       //Serial.println("trails");
       //Trails
       //im not sure what the speed range is like, so just doing generic trails manually for now
@@ -604,8 +603,12 @@ void displayGame() {
       
 //      Serial.println("this player x");
 //      Serial.println(players[i].x);
-      if (!players[i].doingDeathAnim)   pixel[players[i].x][players[i].y] = players[i].identifier; //full power
-      else pixel[players[i].x][players[i].y] = '-';
+      if (!players[i].doingDeathAnim && players[i].speed != 0){
+        pixel[players[i].x][players[i].y] = players[i].identifier; //full power
+      }
+      else {
+        pixel[players[i].x][players[i].y] = '-';
+      }
     }
 
     //death animations
