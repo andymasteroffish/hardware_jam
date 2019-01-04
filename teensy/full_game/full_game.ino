@@ -800,7 +800,7 @@ void displayGame() {
           }
 
           if (col_char / 10 == 2) { //p3
-             float pct = (10.0 - col_char % 10.0) / 10.0;
+             float pct = (10.0 - col_char % 10) / 10.0;
              color = pix0.Color(players[2].r * pct, players[2].g * pct, players[2].b * pct);
           }
 

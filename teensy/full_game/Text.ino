@@ -227,7 +227,7 @@ boolean letter_here[NUM_ROWS][LETTER_WIDTH] = {   {true, false, false, false, fa
 
 
 void printWord(String word, char col, int start_x){
-  printWord(word, col, star_x, false);
+  printWord(word, col, start_x, false);
 }
 void printWord(String word, char col, int start_x, bool wrap) {
   int cur_x = start_x;
