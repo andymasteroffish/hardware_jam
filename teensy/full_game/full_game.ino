@@ -686,7 +686,7 @@ void displayGame() {
   void displayPregame() {
     //time to advance
     if (millis() > nextPregameStepTime) {
-      nextPregameStepTime = millis() + 50;
+      nextPregameStepTime = millis() + 60;
       pregameStep++;
     }
 
