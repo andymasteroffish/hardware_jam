@@ -814,6 +814,18 @@ void displaySettings(){
       pixel[obstacles[1].x][y] = 's';
     }
   }
+
+  //2 is num players
+
+  //3 is start speed
+
+  //4 is exit (drawing a check mark)
+  int check_x = obstacles[4].x;
+  pixel[check_x-2][2] = 'a';
+  pixel[check_x-1][3] = 'a';
+  pixel[check_x+0][2] = 'a';
+  pixel[check_x+1][1] = 'a';
+  pixel[check_x+2][0] = 'a'; 
 }
 
 void button_pressed_settings(int id) {
@@ -823,6 +835,15 @@ void button_pressed_settings(int id) {
     if (global_brightness > 1.1){
       global_brightness = 0.2;
     }
+  }
+
+  //2 is num players
+
+  //3 is start speed
+
+  //4 is exit
+  if (id==4){
+    gameState == STATE_INTRO;
   }
 }
 
