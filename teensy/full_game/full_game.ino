@@ -73,6 +73,7 @@ int winner = -1;
 #define STATE_PREGAME 1
 #define STATE_GAME 2
 #define STATE_GAMEOVER 3
+#define STATE_SETTINGS 4
 int gameState = STATE_INTRO;
 
 //timing out game over
@@ -101,15 +102,21 @@ Button buttons[NUM_BUTTONS];
 int button_lock_timer = 0;
 int button_lock_time = 1000;
 
+//going to settings mode
+int settings_timer = 0;
+int settings_timer_to_trigger = 50;
+
+float global_brightness = 1.0f;
+
 //LEDs
 //this is ugly, but putting them in an array from the start keeps failing
 //data pin then clock pin
 //data is green, clock is yellow
 Adafruit_DotStar pix0 = Adafruit_DotStar(NUM_COLS, 4, 5 , DOTSTAR_BRG);
 Adafruit_DotStar pix1 = Adafruit_DotStar(NUM_COLS, 6, 7, DOTSTAR_BRG);
-Adafruit_DotStar pix2 = Adafruit_DotStar(NUM_COLS+1, 11, 12, DOTSTAR_BRG);
-Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS+1, 13, 14, DOTSTAR_BRG);    //right now this strip is messed up and we skip the first LED
-Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS+1 , 15, 16, DOTSTAR_BRG); //there was an extra LED on this one
+Adafruit_DotStar pix2 = Adafruit_DotStar(NUM_COLS + 1, 11, 12, DOTSTAR_BRG);
+Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS + 1, 13, 14, DOTSTAR_BRG);  //right now this strip is messed up and we skip the first LED
+Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS + 1 , 15, 16, DOTSTAR_BRG); //there was an extra LED on this one
 
 //trakcing which columns have changed this frame
 int updatedCols[10];
@@ -180,24 +187,24 @@ void setup() {
   obstacles[7].x += 10;
 
   //dpending on the type, turn a few on
-//  for (int i = 0; i < NUM_OBSTACLES; i++) {
-//    if (obstacles[i].action == 's') {
-//      obstacles[i].onRows[0] = true;
-//      obstacles[i].onRows[1] = true;
-//    }
-//    if (obstacles[i].action == 'b') {
-//      obstacles[i].onRows[0] = true;
-//      obstacles[i].onRows[1] = true;
-//    }
-//    if (obstacles[i].action == 'a') {
-//      obstacles[i].onRows[0] = true;
-//      obstacles[i].onRows[1] = true;
-//    }
-//    if (obstacles[i].action == 'r') {
-//      obstacles[i].onRows[0] = true;
-//      obstacles[i].onRows[1] = true;
-//    }
-//  }
+  //  for (int i = 0; i < NUM_OBSTACLES; i++) {
+  //    if (obstacles[i].action == 's') {
+  //      obstacles[i].onRows[0] = true;
+  //      obstacles[i].onRows[1] = true;
+  //    }
+  //    if (obstacles[i].action == 'b') {
+  //      obstacles[i].onRows[0] = true;
+  //      obstacles[i].onRows[1] = true;
+  //    }
+  //    if (obstacles[i].action == 'a') {
+  //      obstacles[i].onRows[0] = true;
+  //      obstacles[i].onRows[1] = true;
+  //    }
+  //    if (obstacles[i].action == 'r') {
+  //      obstacles[i].onRows[0] = true;
+  //      obstacles[i].onRows[1] = true;
+  //    }
+  //  }
 
   //buttons
   buttons[0].pin = 3;
@@ -246,8 +253,8 @@ void setup() {
   pix4.begin();
   pix4.show();
 
-  if (debug_skip_intro){
-    reset();  
+  if (debug_skip_intro) {
+    reset();
     gameState = STATE_GAME;
   }
 }
@@ -258,9 +265,9 @@ void reset() {
   }
 
   //randomize obstacles (odd numbers are always blockers)
-  for (int i=0; i<NUM_OBSTACLES; i+=2){
-//    String this_massage = "set obstacle" + String(i);
-//    Serial.print(this_massage);
+  for (int i = 0; i < NUM_OBSTACLES; i += 2) {
+    //    String this_massage = "set obstacle" + String(i);
+    //    Serial.print(this_massage);
     int rand_val = (int)random(0, 3);
     if (rand_val == 0) obstacles[i].action = 'a';
     if (rand_val == 1) obstacles[i].action = 's';
@@ -268,15 +275,15 @@ void reset() {
   }
   //make sure we have at leats one accelerator
   int rand_obstacle = (int)random(0, 3) * 2;
-//  String another_massage = "set obstacle" + String(rand_obstacle);
-//  Serial.print(another_massage);
+  //  String another_massage = "set obstacle" + String(rand_obstacle);
+  //  Serial.print(another_massage);
   obstacles[rand_obstacle].action = 'a';
 
   String ("done setting obstacles");
-  
+
   //set them up
   for (int i = 0; i < NUM_OBSTACLES; i++) {
-    for (int k=0; k<5; k++){
+    for (int k = 0; k < 5; k++) {
       obstacles[i].onRows[k] = false;
     }
     if (obstacles[i].action == 's') {
@@ -302,7 +309,7 @@ void reset() {
   players[0].y = 1;
   players[1].y = 2;//3;
   players[2].y = 3;
-    
+
   for (int i = 0; i < NUM_PLAYERS; i++) {
     players[i].x = playerStarts[i];
     for (int j = 0; j < MAX_TRAILS; j++) players[i].pX[j] = players[i].x;
@@ -335,6 +342,7 @@ void loop() {
   else if (gameState == STATE_PREGAME)   displayPregame();
   else if (gameState == STATE_GAME)      runGame();
   else if (gameState == STATE_GAMEOVER)  displayWinner(winner);
+  else if (gameState == STATE_SETTINGS)  displaySettings();
 
   //displaying the thing
   setLEDs();
@@ -368,10 +376,10 @@ void runGame() {
   }
 
   //time to speed up?
-  if (millis() > next_speed_up_time && !checkDeathAnimations()){
+  if (millis() > next_speed_up_time && !checkDeathAnimations()) {
     next_speed_up_time = millis() + millis_between_speed_up;
     for (int i = 0; i < NUM_PLAYERS; i++) {
-      if (players[i].speed > 50){
+      if (players[i].speed > 50) {
         players[i].speed -= speed_up_ammount;
       }
     }
@@ -387,7 +395,7 @@ void advancePlayer(int p) {
     players[p].pX[k] = players[p].pX[k - 1];
 
   players[p].pX[0] = players[p].x;
-  
+
   //move
   players[p].x += players[p].dir;
   if (players[p].x == NUM_COLS) {
@@ -503,7 +511,11 @@ void checkInput() {
         buttons[i].next_check_time = millis() + debounce_time;
         //Serial.println("button: " + String(buttons[i].is_held));
         if (buttons[i].is_held) {
-          button_pressed(i);
+          if (gameState == STATE_SETTINGS){
+            button_pressed_settings(i);
+          }else{
+            button_pressed(i);
+          }
         }
       }
     }
@@ -512,8 +524,8 @@ void checkInput() {
 
 void button_pressed(int id) {
   if (!use_debug_serial_display) {
-//    Serial.print("pressed ");
-//    Serial.println(id);
+    //    Serial.print("pressed ");
+    //    Serial.println(id);
     Serial.print("button pin ");
     Serial.println(buttons[id].pin);
     //return; //kill me
@@ -545,15 +557,15 @@ void displayGame() {
   //Serial.println("doing display");
   //do the player trails before the obstacles
   for (int i = 0; i < NUM_PLAYERS; i++) {
-    
 
-      //getting the trial positions here to be sure that they loop correctly
-      //previously these were causing index out of bounds errors
-      //Updated: hardcoded trails for time ... fix later to make dynamic
-      int trail_x_1 = (players[i].x - players[i].dir     + NUM_COLS) % NUM_COLS;
-      int trail_x_2 = (players[i].x - players[i].dir * 2 + NUM_COLS) % NUM_COLS;
-      int trail_x_3 = (players[i].x - players[i].dir * 3 + NUM_COLS) % NUM_COLS;
-      int trail_x_4 = (players[i].x - players[i].dir * 4 + NUM_COLS) % NUM_COLS;
+
+    //getting the trial positions here to be sure that they loop correctly
+    //previously these were causing index out of bounds errors
+    //Updated: hardcoded trails for time ... fix later to make dynamic
+    int trail_x_1 = (players[i].x - players[i].dir     + NUM_COLS) % NUM_COLS;
+    int trail_x_2 = (players[i].x - players[i].dir * 2 + NUM_COLS) % NUM_COLS;
+    int trail_x_3 = (players[i].x - players[i].dir * 3 + NUM_COLS) % NUM_COLS;
+    int trail_x_4 = (players[i].x - players[i].dir * 4 + NUM_COLS) % NUM_COLS;
 
     if (!players[i].doingDeathAnim && players[i].speed != 0) {
       //Serial.println("trails");
@@ -562,10 +574,10 @@ void displayGame() {
       //also wont show right if it shifts, but we could store the previous positions if it feels weird
 
       //starter trail
-      if (players[i].speed > startSpeed * speedMult){
+      if (players[i].speed > startSpeed * speedMult) {
         pixel[trail_x_1][players[i].y] = players[i].identifier + 8;
         //pixel[trail_x_2][players[i].y] = players[i].identifier + 8;
-      } else if (players[i].speed <= startSpeed * speedMult){// && players[i].speed >= startSpeed * (speedMult * 2)) {
+      } else if (players[i].speed <= startSpeed * speedMult) { // && players[i].speed >= startSpeed * (speedMult * 2)) {
         //mid trail
         pixel[trail_x_1][players[i].y] = players[i].identifier + 3;
         pixel[trail_x_1][players[i].y] = players[i].identifier + 5;
@@ -597,13 +609,13 @@ void displayGame() {
     for (int i = 0; i < NUM_PLAYERS; i++) {
       //sometime splayer x position is garbage data
       //this is a sloppy solution, but it was causing crashes and I need to go home soon
-      if (players[i].x < 0 || players[i].x >= NUM_COLS){
+      if (players[i].x < 0 || players[i].x >= NUM_COLS) {
         players[i].x = playerStarts[i];
       }
-      
-//      Serial.println("this player x");
-//      Serial.println(players[i].x);
-      if (!players[i].doingDeathAnim && players[i].speed != 0){
+
+      //      Serial.println("this player x");
+      //      Serial.println(players[i].x);
+      if (!players[i].doingDeathAnim && players[i].speed != 0) {
         pixel[players[i].x][players[i].y] = players[i].identifier; //full power
       }
       else {
@@ -653,273 +665,322 @@ void displayGame() {
   }
 }
 
-  void displayIntro() {
-    int mod = (millis() / 400) % NUM_COLS;
-    String abc = "-bsar01";
-    //println("mod=" + mod);
+void displayIntro() {
+  int mod = (millis() / 400) % NUM_COLS;
+  String abc = "-bsar01";
+  //println("mod=" + mod);
 
-    //normal display
-    if (!use_debug_serial_display) {
+  //normal display
+  if (!use_debug_serial_display) {
 
-      //flashing
-      for (int y = 0; y < NUM_ROWS; y++) {
-        for (int x = 0; x < NUM_COLS; x++) {
-          int loc = x + mod + y * NUM_COLS;
-          pixel[x][y] = abc.charAt(loc % abc.length());
-        }
-      }
-
-      //show the title
-      String title_text = "circumnavigators";
-      int title_x = NUM_COLS - (millis() / 70) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
-      printWord(title_text, 'r', title_x);
-    }
-
-    //debug display with fewer changing pixels
-    else {
-      for (int y = 0; y < NUM_ROWS; y++) {
-        pixel[mod][y] = 'b';
-      }
-    }
-  }
-
-  void displayPregame() {
-    //time to advance
-    if (millis() > nextPregameStepTime) {
-      nextPregameStepTime = millis() + 60;
-      pregameStep++;
-    }
-
-    //blank the board
-    resetMatrix();
-
-    //show the characters coming in with arrows
-    int trackPos = (NUM_COLS / 2) - pregameStep;
-    if (trackPos < 0)  trackPos = 0;
-    for (int p = 0; p < NUM_PLAYERS; p++) {
-      for (int i = 0; i < trackPos; i++) {
-        int x1 = (playerStarts[p] + i) % NUM_COLS;
-        int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
-
-        if (i != trackPos - 3) {
-          pixel[x1][players[p].y] = players[p].identifier;
-          pixel[x2][players[p].y] = players[p].identifier;
-        }
-
-        //arrow tail
-        if (i == trackPos - 1) {
-          int x1Shift = (x1 + 1) % NUM_COLS;
-          int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
-          pixel[x1][players[p].y - 1] = players[p].identifier;
-          pixel[x1Shift][players[p].y - 1] = players[p].identifier;
-          pixel[x1Shift][players[p].y + 1] = players[p].identifier;
-          pixel[x1][players[p].y + 1] = players[p].identifier;
-
-          pixel[x2][players[p].y - 1] = players[p].identifier;
-          pixel[x2Shift][players[p].y - 1] = players[p].identifier;
-          pixel[x2Shift][players[p].y + 1] = players[p].identifier;
-          pixel[x2][players[p].y + 1] = players[p].identifier;
-        }
-      }
-    }
-
-    //blink the game
-    //Serial.println("blink");
-    if (pregameStep > NUM_COLS / 2) {
-      if (pregameStep % 4 < 2) {
-        //Serial.println("display");
-        displayGame();
-      }
-
-      //make sure the players are shown
-      for (int i = 0; i < NUM_PLAYERS; i++) {
-        pixel[players[i].x][players[i].y] = players[i].identifier;
-      }
-    }
-
-    //after a bit, go to the game
-    if (pregameStep == NUM_COLS / 2 + 20) {
-      Serial.println("go to game");
-      gameState = STATE_GAME;
-    }
-  }
-
-  void displayWinner(int player) {
-    int mod = (millis() / 50) % NUM_COLS;
-    //println("PLAYER " + player + " WON!!!" + " mod=" + mod);
+    //flashing
     for (int y = 0; y < NUM_ROWS; y++) {
       for (int x = 0; x < NUM_COLS; x++) {
-        int loc = x + y * NUM_COLS;
-        pixel[x][y] = players[player].identifier;// Integer.toString(player).charAt(0);
-        if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = '-';
+        int loc = x + mod + y * NUM_COLS;
+        pixel[x][y] = abc.charAt(loc % abc.length());
       }
     }
 
-     String title_text = "winner";
-      //int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
-      int title_x = NUM_COLS - (millis() / 100) %  NUM_COLS;
-      printWord(title_text,  players[player].identifier, title_x, true);
-
-      if (millis() > end_game_over_time){
-        gameState = STATE_INTRO;
-        button_lock_timer = millis() + button_lock_time;
-      }
+    //show the title
+    String title_text = "circumnavigators";
+    int title_x = NUM_COLS - (millis() / 70) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
+    printWord(title_text, 'r', title_x);
   }
 
-
-  void resetMatrix() {
+  //debug display with fewer changing pixels
+  else {
     for (int y = 0; y < NUM_ROWS; y++) {
-      for (int x = 0; x < NUM_COLS; x++) {
-        pixel[x][y] = '-';
+      pixel[mod][y] = 'b';
+    }
+  }
+}
+
+void displayPregame() {
+  //time to advance
+  if (millis() > nextPregameStepTime) {
+    nextPregameStepTime = millis() + 60;
+    pregameStep++;
+  }
+
+  //check if the settings buttons are being held
+  if(check_holding_for_settings()){
+    Serial.println("go to settings");
+    gameState = STATE_SETTINGS;
+    return;
+  }
+
+  //blank the board
+  resetMatrix();
+
+  //show the characters coming in with arrows
+  int trackPos = (NUM_COLS / 2) - pregameStep;
+  if (trackPos < 0)  trackPos = 0;
+  for (int p = 0; p < NUM_PLAYERS; p++) {
+    for (int i = 0; i < trackPos; i++) {
+      int x1 = (playerStarts[p] + i) % NUM_COLS;
+      int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
+
+      if (i != trackPos - 3) {
+        pixel[x1][players[p].y] = players[p].identifier;
+        pixel[x2][players[p].y] = players[p].identifier;
+      }
+
+      //arrow tail
+      if (i == trackPos - 1) {
+        int x1Shift = (x1 + 1) % NUM_COLS;
+        int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
+        pixel[x1][players[p].y - 1] = players[p].identifier;
+        pixel[x1Shift][players[p].y - 1] = players[p].identifier;
+        pixel[x1Shift][players[p].y + 1] = players[p].identifier;
+        pixel[x1][players[p].y + 1] = players[p].identifier;
+
+        pixel[x2][players[p].y - 1] = players[p].identifier;
+        pixel[x2Shift][players[p].y - 1] = players[p].identifier;
+        pixel[x2Shift][players[p].y + 1] = players[p].identifier;
+        pixel[x2][players[p].y + 1] = players[p].identifier;
       }
     }
   }
 
-  void setLEDs() {
-    boolean anythingChanged = false;
+  //blink the game
+  //Serial.println("blink");
+  if (pregameStep > NUM_COLS / 2) {
+    if (pregameStep % 4 < 2) {
+      //Serial.println("display");
+      displayGame();
+    }
 
-    for (int y = 0; y < NUM_ROWS; y++) {
-      for (int x = 0; x < NUM_COLS; x++) {
+    //make sure the players are shown
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+      pixel[players[i].x][players[i].y] = players[i].identifier;
+    }
+  }
 
-        //chekc if this pixel has changed
-        if (pixel[x][y] != last_sent_grid[x][y]) {
-          char col_char = pixel[x][y];
-          uint32_t color = 0x000000;  //'-' (ascii 45)
+  //after a bit, go to the game
+  if (pregameStep == NUM_COLS / 2 + 20) {
+    Serial.println("go to game");
+    gameState = STATE_GAME;
+  }
+}
 
-          if (col_char == 'b') color = 0x004400;  //blocked (ascii 98)
-          if (col_char == 's') color = 0x444444;  //shifter (ascii 115)
-          if (col_char == 'a') color = 0x440000;  //accelerator (ascii 97)
-          if (col_char == 'r') color = 0x004444;  //reverse (ascii 114)
+//get to settings by holding several buttons down at once during the intro
+bool check_holding_for_settings() {
+  int num_held = 0;
+  for (int i = 0; i < NUM_BUTTONS; i++) {
+    if (digitalRead(buttons[i].pin) == LOW) {
+        num_held++;
+    }
+  }
 
-          if (col_char / 10 == 0) { //p1
-            float pct = (10.0 - col_char % 10) / 10.0;
-            if (pct != 1.0) pct /= 10; //lowering the trails to 1/10 power
-            color = pix0.Color(players[0].r * pct, players[0].g * pct, players[0].b * pct); //just using the dotstar class to store the color
-          }
-          if (col_char / 10 == 1) { //p2
-            float pct = (10.0 - col_char % 10) / 10.0;
-            if (pct != 1.0) pct /= 10; //lowering the trails to 1/10 power
-            color = pix0.Color(players[1].r * pct, players[1].g * pct, players[1].b * pct);
-          }
+  if (num_held >= 4){
+    settings_timer++;
+    if (settings_timer >= settings_timer_to_trigger){
+      return true;
+    }
+  }
 
-          if (col_char / 10 == 2) { //p3
-             float pct = (10.0 - col_char % 10) / 10.0;
-             color = pix0.Color(players[2].r * pct, players[2].g * pct, players[2].b * pct);
-          }
+  return false;
+}
 
-          //if (col_char == '0') color = 0x000088;  //p1
-          //if (col_char == '1') color = 0x888800;  //p2
-          //if (col_char == '2') color = 0x000044;  //p3
+void displayWinner(int player) {
+  int mod = (millis() / 50) % NUM_COLS;
+  //println("PLAYER " + player + " WON!!!" + " mod=" + mod);
+  for (int y = 0; y < NUM_ROWS; y++) {
+    for (int x = 0; x < NUM_COLS; x++) {
+      int loc = x + y * NUM_COLS;
+      pixel[x][y] = players[player].identifier;// Integer.toString(player).charAt(0);
+      if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = '-';
+    }
+  }
+
+  String title_text = "winner";
+  //int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
+  int title_x = NUM_COLS - (millis() / 100) %  NUM_COLS;
+  printWord(title_text,  players[player].identifier, title_x, true);
+
+  if (millis() > end_game_over_time) {
+    gameState = STATE_INTRO;
+    button_lock_timer = millis() + button_lock_time;
+  }
+}
+
+void displaySettings(){
+  resetMatrix();
+
+  //1 is brightness
+  int brightness_bar_height = NUM_ROWS * global_brightness;
+  for (int y = 0; y < NUM_ROWS; y++) {
+    if (NUM_ROWS-y <= brightness_bar_height){
+      pixel[obstacles[1].x][y] = 's';
+    }
+  }
+}
+
+void button_pressed_settings(int id) {
+  //brightness
+  if (id==1){
+    global_brightness += 0.2;
+    if (global_brightness > 1.1){
+      global_brightness = 0.2;
+    }
+  }
+}
+
+void resetMatrix() {
+  for (int y = 0; y < NUM_ROWS; y++) {
+    for (int x = 0; x < NUM_COLS; x++) {
+      pixel[x][y] = '-';
+    }
+  }
+}
+
+void setLEDs() {
+  boolean anythingChanged = false;
+
+  for (int y = 0; y < NUM_ROWS; y++) {
+    for (int x = 0; x < NUM_COLS; x++) {
+
+      //chekc if this pixel has changed
+      if (pixel[x][y] != last_sent_grid[x][y]) {
+        char col_char = pixel[x][y];
+        uint32_t color = 0x000000;  //'-' (ascii 45)
+
+        if (col_char == 'b') color = 0x004400;  //blocked (ascii 98)
+        if (col_char == 's') color = 0x444444;  //shifter (ascii 115)
+        if (col_char == 'a') color = 0x440000;  //accelerator (ascii 97)
+        if (col_char == 'r') color = 0x004444;  //reverse (ascii 114)
+
+        if (col_char / 10 == 0) { //p1
+          float pct = (10.0 - col_char % 10) / 10.0;
+          if (pct != 1.0) pct /= 10; //lowering the trails to 1/10 power
+          color = pix0.Color(players[0].r * pct, players[0].g * pct, players[0].b * pct); //just using the dotstar class to store the color
+        }
+        if (col_char / 10 == 1) { //p2
+          float pct = (10.0 - col_char % 10) / 10.0;
+          if (pct != 1.0) pct /= 10; //lowering the trails to 1/10 power
+          color = pix0.Color(players[1].r * pct, players[1].g * pct, players[1].b * pct);
+        }
+
+        if (col_char / 10 == 2) { //p3
+          float pct = (10.0 - col_char % 10) / 10.0;
+          color = pix0.Color(players[2].r * pct, players[2].g * pct, players[2].b * pct);
+        }
+
+        //if (col_char == '0') color = 0x000088;  //p1
+        //if (col_char == '1') color = 0x888800;  //p2
+        //if (col_char == '2') color = 0x000044;  //p3
+
+        color *= global_brightness;
 
 
-          if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , color);
-          if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x -1, color);
-          if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , color);
-          if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , color);
-          if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , color);
+        if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , color);
+        if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x - 1, color);
+        if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , color);
+        if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , color);
+        if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , color);
 
-          anythingChanged = true;
+        anythingChanged = true;
 
-          if (use_debug_serial_display) {
-            debugDisplay(x, y, col_char);
-          }
+        if (use_debug_serial_display) {
+          debugDisplay(x, y, col_char);
         }
       }
     }
+  }
 
-    //if any pixels were changed, updated all of the LEDs and store the current grid for comparison next frame
-    if (anythingChanged) {
-      pix0.show();
-      pix1.show();
-      pix2.show();
-      pix3.show();
-      pix4.show();
+  //if any pixels were changed, updated all of the LEDs and store the current grid for comparison next frame
+  if (anythingChanged) {
+    pix0.show();
+    pix1.show();
+    pix2.show();
+    pix3.show();
+    pix4.show();
 
-      //  //store the current grid for comparison
-      for (int y = 0; y < NUM_ROWS; y++) {
-        for (int x = 0; x < NUM_COLS; x++) {
-          last_sent_grid[x][y] = pixel[x][y];
-        }
+    //  //store the current grid for comparison
+    for (int y = 0; y < NUM_ROWS; y++) {
+      for (int x = 0; x < NUM_COLS; x++) {
+        last_sent_grid[x][y] = pixel[x][y];
       }
     }
   }
+}
 
 
-  void debugDisplay(int x, int y, char col) {
-    String line = String(x) + "," + String(y) + "," + pixel[x][y] + "\n";
-    debug_display_buffer += line;
-    num_queued_debug_display++;
+void debugDisplay(int x, int y, char col) {
+  String line = String(x) + "," + String(y) + "," + pixel[x][y] + "\n";
+  debug_display_buffer += line;
+  num_queued_debug_display++;
 
-    if (num_queued_debug_display == 8) {
-      sendDebugDisplayMessage();
-    }
-
-    //Serial.print(line);
+  if (num_queued_debug_display == 8) {
+    sendDebugDisplayMessage();
   }
 
-  void sendDebugDisplayMessage() {
-    //send it
-    Serial.print(debug_display_buffer);
+  //Serial.print(line);
+}
 
-    //reset it
-    num_queued_debug_display = 0;
-    debug_display_buffer = "";
-  }
+void sendDebugDisplayMessage() {
+  //send it
+  Serial.print(debug_display_buffer);
 
-
-  //sending serial to Processing
-  //this does not really work
-  //void debugDisplay() {
-  //  //int start_time = millis();
-  //
-  //  String message = "";
-  //  //get the difference between current grid and last sent grid
-  //  for (int y = 0; y < NUM_ROWS; y++) {
-  //    for (int x = 0; x < NUM_COLS; x++) {
-  //      message += pixel[x][y];
-  //    }
-  //    message += '\n';
-  //  }
-  //  message += '|';
-  //
-  //  Serial.print(message);
-  //
-  //  //int end_time = millis() - start_time;
-  //  //String time_message = "it took "+String(end_time);
-  //  //Serial.println(time_message);
-  //}
+  //reset it
+  num_queued_debug_display = 0;
+  debug_display_buffer = "";
+}
 
 
-  //Was tyring to setup the debug display the same way that we were sending info from Processing during the jam but it was way too slow
+//sending serial to Processing
+//this does not really work
+//void debugDisplay() {
+//  //int start_time = millis();
+//
+//  String message = "";
+//  //get the difference between current grid and last sent grid
+//  for (int y = 0; y < NUM_ROWS; y++) {
+//    for (int x = 0; x < NUM_COLS; x++) {
+//      message += pixel[x][y];
+//    }
+//    message += '\n';
+//  }
+//  message += '|';
+//
+//  Serial.print(message);
+//
+//  //int end_time = millis() - start_time;
+//  //String time_message = "it took "+String(end_time);
+//  //Serial.println(time_message);
+//}
 
-  //void debugDisplay() {
-  //  //int start_time = millis();
-  //
-  //  String message = "";
-  //  //get the difference between current grid and last sent grid
-  //  for (int y = 0; y < NUM_ROWS; y++) {
-  //    for (int x = 0; x < NUM_COLS; x++) {
-  //      if (pixel[x][y] != last_sent_grid[x][y]) {
-  //        String line = String(x) + "," + String(y) + "," + pixel[x][y] + "\n";
-  //        message += line;
-  //        //Serial.print(line);
-  //      }
-  //    }
-  //  }
-  //
-  //  //send the whole thing
-  //  if (message.length() > 2) {
-  //    Serial.print(message);
-  //  }
-  //
-  //  //store the current grid for comparison
-  //  for (int y = 0; y < NUM_ROWS; y++) {
-  //    for (int x = 0; x < NUM_COLS; x++) {
-  //      last_sent_grid[x][y] = pixel[x][y];
-  //    }
-  //  }
-  //
-  //  //int end_time = millis() - start_time;
-  //  //String time_message = "it took "+String(end_time);
-  //  //Serial.println(time_message);
-  //}
+
+//Was tyring to setup the debug display the same way that we were sending info from Processing during the jam but it was way too slow
+
+//void debugDisplay() {
+//  //int start_time = millis();
+//
+//  String message = "";
+//  //get the difference between current grid and last sent grid
+//  for (int y = 0; y < NUM_ROWS; y++) {
+//    for (int x = 0; x < NUM_COLS; x++) {
+//      if (pixel[x][y] != last_sent_grid[x][y]) {
+//        String line = String(x) + "," + String(y) + "," + pixel[x][y] + "\n";
+//        message += line;
+//        //Serial.print(line);
+//      }
+//    }
+//  }
+//
+//  //send the whole thing
+//  if (message.length() > 2) {
+//    Serial.print(message);
+//  }
+//
+//  //store the current grid for comparison
+//  for (int y = 0; y < NUM_ROWS; y++) {
+//    for (int x = 0; x < NUM_COLS; x++) {
+//      last_sent_grid[x][y] = pixel[x][y];
+//    }
+//  }
+//
+//  //int end_time = millis() - start_time;
+//  //String time_message = "it took "+String(end_time);
+//  //Serial.println(time_message);
+//}
