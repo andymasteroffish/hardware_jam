@@ -5,7 +5,7 @@
 #define NUM_ROWS 5
 
 #define NUM_OBSTACLES 8
-#define NUM_PLAYERS 3
+#define MAX_NUM_PLAYERS 3
 #define MAX_TRAILS 3
 
 #define LETTER_WIDTH 5
@@ -18,6 +18,8 @@ boolean debug_no_death = false;
 int startSpeed = 230;  //measured in millis between steps
 float speedMult = 0.75;  //the closer this is to 0, the faster they'll go
 float slowDownMult = 1.5; //if we have one of the obstacles slow the players down, this is how much it will slow them
+
+int num_players = MAX_NUM_PLAYERS;
 
 //speeding up over time
 int millis_between_speed_up = 1000;
@@ -63,8 +65,8 @@ struct Button {
 };
 
 Obstacle obstacles[NUM_OBSTACLES];
-Player players[NUM_PLAYERS];
-int playerStarts[NUM_PLAYERS];
+Player players[MAX_NUM_PLAYERS];
+int playerStarts[MAX_NUM_PLAYERS];
 
 int winner = -1;
 //boolean gameOver = false;
@@ -306,20 +308,32 @@ void reset() {
 
   gameState = STATE_PREGAME;
 
-  players[0].y = 1;
-  players[1].y = 2;//3;
-  players[2].y = 3;
+  if (num_players == 2){
+    players[0].y = 1;
+    players[1].y = 3;
+    players[2].y = 0;
+  }
+  if (num_players == 3){
+    players[0].y = 1;
+    players[1].y = 2;
+    players[2].y = 3;
+  }
 
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  for (int i = 0; i < MAX_NUM_PLAYERS; i++) {
     players[i].x = playerStarts[i];
     for (int j = 0; j < MAX_TRAILS; j++) players[i].pX[j] = players[i].x;
-    //if (NUM_PLAYERS == 2) players[i].y = i * (NUM_ROWS - 1); //put on opposite side
+    //if (num_players == 2) players[i].y = i * (NUM_ROWS - 1); //put on opposite side
     //else                  players[i].y = i; //use its own lane
     players[i].speed = startSpeed;
     players[i].dir = 1;
 
     players[i].doingDeathAnim = false;
     players[i].deathAnimStep = 0;
+
+    //if this player is out, mark them as dead
+    if (i >= num_players){
+      players[i].speed = 0;
+    }
   }
 
 
@@ -367,7 +381,7 @@ void runGame() {
   }
 
   //update our players
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  for (int i = 0; i < num_players; i++) {
     //is it time to move?
     if (millis() > players[i].nextMoveTime && players[i].speed > 0 && !checkDeathAnimations()) {
       advancePlayer(i);
@@ -378,7 +392,7 @@ void runGame() {
   //time to speed up?
   if (millis() > next_speed_up_time && !checkDeathAnimations()) {
     next_speed_up_time = millis() + millis_between_speed_up;
-    for (int i = 0; i < NUM_PLAYERS; i++) {
+    for (int i = 0; i < num_players; i++) {
       if (players[i].speed > 50) {
         players[i].speed -= speed_up_ammount;
       }
@@ -466,7 +480,7 @@ void killPlayer(int id) {
 int checkWinners() { //returns winner index if won
   int winPlayer = -1;
   int playersAlive = 0;
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  for (int i = 0; i < num_players; i++) {
     if (players[i].speed != 0) {
       playersAlive++;
       winPlayer = i;
@@ -481,7 +495,7 @@ int checkWinners() { //returns winner index if won
 }
 
 boolean checkDeathAnimations() {
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  for (int i = 0; i < num_players; i++) {
     if (players[i].doingDeathAnim == true) {
       return true;
     }
@@ -556,7 +570,7 @@ void displayGame() {
   resetMatrix();
   //Serial.println("doing display");
   //do the player trails before the obstacles
-  for (int i = 0; i < NUM_PLAYERS; i++) {
+  for (int i = 0; i < num_players; i++) {
 
 
     //getting the trial positions here to be sure that they loop correctly
@@ -606,7 +620,7 @@ void displayGame() {
     }
 
     //add the players over them
-    for (int i = 0; i < NUM_PLAYERS; i++) {
+    for (int i = 0; i < num_players; i++) {
       //sometime splayer x position is garbage data
       //this is a sloppy solution, but it was causing crashes and I need to go home soon
       if (players[i].x < 0 || players[i].x >= NUM_COLS) {
@@ -624,7 +638,7 @@ void displayGame() {
     }
 
     //death animations
-    for (int i = 0; i < NUM_PLAYERS; i++) {
+    for (int i = 0; i < num_players; i++) {
       if (players[i].doingDeathAnim == true) {
         //how far to go
         int dist = 1 + players[i].deathAnimStep;
@@ -715,7 +729,7 @@ void displayPregame() {
   //show the characters coming in with arrows
   int trackPos = (NUM_COLS / 2) - pregameStep;
   if (trackPos < 0)  trackPos = 0;
-  for (int p = 0; p < NUM_PLAYERS; p++) {
+  for (int p = 0; p < num_players; p++) {
     for (int i = 0; i < trackPos; i++) {
       int x1 = (playerStarts[p] + i) % NUM_COLS;
       int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
@@ -751,7 +765,7 @@ void displayPregame() {
     }
 
     //make sure the players are shown
-    for (int i = 0; i < NUM_PLAYERS; i++) {
+    for (int i = 0; i < num_players; i++) {
       pixel[players[i].x][players[i].y] = players[i].identifier;
     }
   }
@@ -816,6 +830,8 @@ void displaySettings(){
   }
 
   //2 is num players
+  String player_num_text = String(num_players);
+  printWord(player_num_text, players[0].identifier, obstacles[2].x-2)
 
   //3 is start speed
 
@@ -838,6 +854,12 @@ void button_pressed_settings(int id) {
   }
 
   //2 is num players
+  if (id == 2){
+    num_players++;
+    if (num_players > MAX_NUM_PLAYERS){
+      num_players = 2;
+    }
+  }
 
   //3 is start speed
 
