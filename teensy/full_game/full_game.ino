@@ -106,9 +106,10 @@ int button_lock_time = 1000;
 
 //going to settings mode
 int settings_timer = 0;
-int settings_timer_to_trigger = 50;
+int settings_timer_to_trigger = 150;
 
-float global_brightness = 1.0f;
+int global_brightness_setting = 5;    //this is an int value that gets cycled in settings mode
+float global_brightness =  1.0f;
 
 //LEDs
 //this is ugly, but putting them in an array from the start keeps failing
@@ -352,6 +353,7 @@ void reset() {
 void loop() {
   checkInput();
 
+  //Serial.println(gameState);
   if (gameState == STATE_INTRO)          displayIntro();
   else if (gameState == STATE_PREGAME)   displayPregame();
   else if (gameState == STATE_GAME)      runGame();
@@ -789,6 +791,7 @@ bool check_holding_for_settings() {
   if (num_held >= 4){
     settings_timer++;
     if (settings_timer >= settings_timer_to_trigger){
+      settings_timer = 0;
       return true;
     }
   }
@@ -822,7 +825,7 @@ void displaySettings(){
   resetMatrix();
 
   //1 is brightness
-  int brightness_bar_height = NUM_ROWS * global_brightness;
+  int brightness_bar_height = global_brightness_setting;
   for (int y = 0; y < NUM_ROWS; y++) {
     if (NUM_ROWS-y <= brightness_bar_height){
       pixel[obstacles[1].x][y] = 's';
@@ -831,7 +834,8 @@ void displaySettings(){
 
   //2 is num players
   String player_num_text = String(num_players);
-  printWord(player_num_text, players[0].identifier, obstacles[2].x-2)
+  printWord(player_num_text, 's', obstacles[2].x-2);
+
 
   //3 is start speed
 
@@ -847,10 +851,19 @@ void displaySettings(){
 void button_pressed_settings(int id) {
   //brightness
   if (id==1){
-    global_brightness += 0.2;
-    if (global_brightness > 1.1){
-      global_brightness = 0.2;
+    global_brightness_setting++;
+    if (global_brightness_setting >= 6){
+      global_brightness_setting = 1;
     }
+    if (global_brightness_setting == 1)   global_brightness = 0.02;
+    if (global_brightness_setting == 2)   global_brightness = 0.1;
+    if (global_brightness_setting == 3)   global_brightness = 0.5;
+    if (global_brightness_setting == 4)   global_brightness = 0.7;
+    if (global_brightness_setting == 5)   global_brightness = 1.0;
+//    global_brightness += 0.2;
+//    if (global_brightness > 1.1){
+//      global_brightness = 0.2;
+//    }
   }
 
   //2 is num players
@@ -865,7 +878,9 @@ void button_pressed_settings(int id) {
 
   //4 is exit
   if (id==4){
-    gameState == STATE_INTRO;
+    Serial.print("exit settings");
+    gameState = STATE_INTRO;
+    button_lock_timer = millis() + button_lock_time;
   }
 }
 
@@ -888,32 +903,35 @@ void setLEDs() {
         char col_char = pixel[x][y];
         uint32_t color = 0x000000;  //'-' (ascii 45)
 
-        if (col_char == 'b') color = 0x004400;  //blocked (ascii 98)
-        if (col_char == 's') color = 0x444444;  //shifter (ascii 115)
-        if (col_char == 'a') color = 0x440000;  //accelerator (ascii 97)
-        if (col_char == 'r') color = 0x004444;  //reverse (ascii 114)
+//        if (col_char == 'b') color = 0x004400;  //blocked (ascii 98)
+//        if (col_char == 's') color = 0x444444;  //shifter (ascii 115)
+//        if (col_char == 'a') color = 0x440000;  //accelerator (ascii 97)
+//        if (col_char == 'r') color = 0x004444;  //reverse (ascii 114)
+
+        if (col_char == 'b') color = pix0.Color(0*global_brightness,   100*global_brightness, 0*global_brightness);
+        if (col_char == 's') color = pix0.Color(100*global_brightness, 100*global_brightness, 100*global_brightness);
+        if (col_char == 'a') color = pix0.Color(100*global_brightness, 0*global_brightness,   0*global_brightness);
+        if (col_char == 'r') color = pix0.Color(0*global_brightness,   100*global_brightness, 100*global_brightness);
 
         if (col_char / 10 == 0) { //p1
           float pct = (10.0 - col_char % 10) / 10.0;
           if (pct != 1.0) pct /= 10; //lowering the trails to 1/10 power
-          color = pix0.Color(players[0].r * pct, players[0].g * pct, players[0].b * pct); //just using the dotstar class to store the color
+          color = pix0.Color(players[0].r * pct*global_brightness, players[0].g * pct*global_brightness, players[0].b * pct*global_brightness); //just using the dotstar class to store the color
         }
         if (col_char / 10 == 1) { //p2
           float pct = (10.0 - col_char % 10) / 10.0;
           if (pct != 1.0) pct /= 10; //lowering the trails to 1/10 power
-          color = pix0.Color(players[1].r * pct, players[1].g * pct, players[1].b * pct);
+          color = pix0.Color(players[1].r * pct*global_brightness, players[1].g * pct*global_brightness, players[1].b * pct*global_brightness);
         }
 
         if (col_char / 10 == 2) { //p3
           float pct = (10.0 - col_char % 10) / 10.0;
-          color = pix0.Color(players[2].r * pct, players[2].g * pct, players[2].b * pct);
+          color = pix0.Color(players[2].r * pct*global_brightness, players[2].g * pct*global_brightness, players[2].b * pct*global_brightness);
         }
 
         //if (col_char == '0') color = 0x000088;  //p1
         //if (col_char == '1') color = 0x888800;  //p2
         //if (col_char == '2') color = 0x000044;  //p3
-
-        color *= global_brightness;
 
 
         if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , color);

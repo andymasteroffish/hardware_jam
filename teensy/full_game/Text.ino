@@ -20,6 +20,12 @@ boolean letter_2[NUM_ROWS][LETTER_WIDTH] = { {false, true, true, true, false},
   {false, true, true, false, false},
   {true, true, true, true, true}
 };
+boolean letter_3[NUM_ROWS][LETTER_WIDTH] = { {true, true, true, true, true},
+  {false, false, false, false, true},
+  {true, true, true, true, true},
+  {false, false, false, false, true},
+  {true, true, true, true, true}
+};
 
 boolean letter_a[NUM_ROWS][LETTER_WIDTH] = { {false, false, true, false, false},
   {false, true, false, true, false},
@@ -244,6 +250,9 @@ void printLetter(char thisChar, char col, int start_x, bool wrap) {
       break;
     case '2':
       copy2D(letter_2, letter_grid);
+      break;
+    case '3':
+      copy2D(letter_3, letter_grid);
       break;
     case 'a':
       copy2D(letter_a, letter_grid);
