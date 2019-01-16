@@ -50,6 +50,8 @@ struct Player {
   unsigned char b;
   int pX[MAX_TRAILS];
 
+  int dist_traveled;
+
   //death animation
   boolean doingDeathAnim;
   int deathAnimStep;
@@ -327,6 +329,7 @@ void reset() {
     //else                  players[i].y = i; //use its own lane
     players[i].speed = startSpeed;
     players[i].dir = 1;
+    players[i].dist_traveled = 0;
 
     players[i].doingDeathAnim = false;
     players[i].deathAnimStep = 0;
@@ -406,6 +409,7 @@ void runGame() {
 }
 
 void advancePlayer(int p) {
+  players[p].dist_traveled++;
   //store the old positions
   for (int k = MAX_TRAILS - 1; k > 1; k--)
     players[p].pX[k] = players[p].pX[k - 1];
@@ -422,20 +426,22 @@ void advancePlayer(int p) {
   }
 
   //check for obstacles
-  for (int i = 0; i < NUM_OBSTACLES; i++) {
-    if (obstacles[i].x == players[p].x) {
-      boolean hitMe = false;
-      for (int r = 0; r < NUM_ROWS; r++) {
-        if (obstacles[i].onRows[r] && r == players[p].y) {
-          //dis fool hit duh obsacle lolz
-          hitMe = true;
+  //if (players[0].dist_traveled > NUM_COLS+2){     //no getting hit on your first time around
+    for (int i = 0; i < NUM_OBSTACLES; i++) {
+      if (obstacles[i].x == players[p].x) {
+        boolean hitMe = false;
+        for (int r = 0; r < NUM_ROWS; r++) {
+          if (obstacles[i].onRows[r] && r == players[p].y) {
+            //dis fool hit duh obsacle lolz
+            hitMe = true;
+          }
+        }
+        if (hitMe) {
+          doObstacleEffect(p, i);
         }
       }
-      if (hitMe) {
-        doObstacleEffect(p, i);
-      }
     }
-  }
+  //}
 }
 
 void doObstacleEffect(int p, int o) {
@@ -613,29 +619,33 @@ void displayGame() {
     }
 
     //add the obstacles
-    for (int i = 0; i < NUM_OBSTACLES; i++) {
-      for (int r = 0; r < NUM_ROWS; r++) {
-        if (obstacles[i].onRows[r]) {
-          pixel [obstacles[i].x][r] = obstacles[i].action;
+    //if (players[0].dist_traveled >= NUM_COLS){    //only drawing if players have gone aorund once
+      for (int i = 0; i < NUM_OBSTACLES; i++) {
+        for (int r = 0; r < NUM_ROWS; r++) {
+          if (obstacles[i].onRows[r]) {
+            pixel [obstacles[i].x][r] = obstacles[i].action;
+          }
         }
       }
-    }
+    //}
 
     //add the players over them
     for (int i = 0; i < num_players; i++) {
-      //sometime splayer x position is garbage data
-      //this is a sloppy solution, but it was causing crashes and I need to go home soon
-      if (players[i].x < 0 || players[i].x >= NUM_COLS) {
-        players[i].x = playerStarts[i];
-      }
-
-      //      Serial.println("this player x");
-      //      Serial.println(players[i].x);
-      if (!players[i].doingDeathAnim && players[i].speed != 0) {
-        pixel[players[i].x][players[i].y] = players[i].identifier; //full power
-      }
-      else {
-        pixel[players[i].x][players[i].y] = '-';
+      if(players[i].speed > 0){
+        //sometime splayer x position is garbage data
+        //this is a sloppy solution, but it was causing crashes and I need to go home soon
+        if (players[i].x < 0 || players[i].x >= NUM_COLS) {
+          players[i].x = playerStarts[i];
+        }
+  
+        //      Serial.println("this player x");
+        //      Serial.println(players[i].x);
+        if (!players[i].doingDeathAnim && players[i].speed != 0) {
+          pixel[players[i].x][players[i].y] = players[i].identifier; //full power
+        }
+        else {
+          pixel[players[i].x][players[i].y] = '-';
+        }
       }
     }
 
