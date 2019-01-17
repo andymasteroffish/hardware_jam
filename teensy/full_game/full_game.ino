@@ -374,6 +374,14 @@ void loop() {
 
 void runGame() {
 
+  int live_players = 0;
+  for (int i = 0; i < num_players; i++) {
+    if (players[i].speed > 0){
+      live_players++; 
+    }
+  }
+  //Serial.println(live_players);
+
   winner = checkWinners(); //winner remains -1 if no winner
   if (winner != -1 && gameState == STATE_GAME && !checkDeathAnimations()) {
     gameState = STATE_GAMEOVER;
@@ -388,7 +396,7 @@ void runGame() {
   //update our players
   for (int i = 0; i < num_players; i++) {
     //is it time to move?
-    if (millis() > players[i].nextMoveTime && players[i].speed > 0 && !checkDeathAnimations()) {
+    if (millis() > players[i].nextMoveTime && players[i].speed > 0 && (live_players > 1 || !checkDeathAnimations()) ) {
       advancePlayer(i);
       players[i].nextMoveTime = millis() + players[i].speed;
     }
