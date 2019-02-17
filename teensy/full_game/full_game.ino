@@ -172,14 +172,14 @@ void setup() {
 
   //set the types
   //moving the X values to match the buttons
-  obstacles[0].action = 'a';
-  obstacles[1].action = 'b';//'s';
-  obstacles[2].action = 's';//'a';
-  obstacles[3].action = 'b';//'s';
-  obstacles[4].action = 'a';
+  obstacles[0].action = 'b';
+  obstacles[1].action = 'b';
+  obstacles[2].action = 'b';
+  obstacles[3].action = 'b';
+  obstacles[4].action = 'b';
   obstacles[5].action = 'b';
-  obstacles[6].action = 'r';//'a';
-  obstacles[7].action = 'b';//'s';
+  obstacles[6].action = 'b';
+  obstacles[7].action = 'b';
 
   //adjusting them into place
   obstacles[0].x = 9;
@@ -191,25 +191,10 @@ void setup() {
   obstacles[6].x += 8;
   obstacles[7].x += 10;
 
-  //dpending on the type, turn a few on
-  //  for (int i = 0; i < NUM_OBSTACLES; i++) {
-  //    if (obstacles[i].action == 's') {
-  //      obstacles[i].onRows[0] = true;
-  //      obstacles[i].onRows[1] = true;
-  //    }
-  //    if (obstacles[i].action == 'b') {
-  //      obstacles[i].onRows[0] = true;
-  //      obstacles[i].onRows[1] = true;
-  //    }
-  //    if (obstacles[i].action == 'a') {
-  //      obstacles[i].onRows[0] = true;
-  //      obstacles[i].onRows[1] = true;
-  //    }
-  //    if (obstacles[i].action == 'r') {
-  //      obstacles[i].onRows[0] = true;
-  //      obstacles[i].onRows[1] = true;
-  //    }
-  //  }
+  //just move them allover a bit
+  for (int i = 0; i < NUM_OBSTACLES; i ++) {
+    obstacles[i].x-= 1;
+  }
 
   //buttons
   buttons[0].pin = 3;
@@ -269,14 +254,18 @@ void reset() {
     Serial.println("game start");
   }
 
-  //randomize obstacles (odd numbers are always blockers)
-  for (int i = 0; i < NUM_OBSTACLES; i += 2) {
+  //randomize obstacles (every other is blocker)
+  for (int i = 0; i < NUM_OBSTACLES; i ++) {
     //    String this_massage = "set obstacle" + String(i);
     //    Serial.print(this_massage);
-    int rand_val = (int)random(0, 3);
-    if (rand_val == 0) obstacles[i].action = 'a';
-    if (rand_val == 1) obstacles[i].action = 's';
-    if (rand_val == 2) obstacles[i].action = 'r';
+    if (i%2==1){
+      obstacles[i].action = 'b';
+    }else{
+      int rand_val = (int)random(0, 3);
+      if (rand_val == 0) obstacles[i].action = 'a';
+      if (rand_val == 1) obstacles[i].action = 's';
+      if (rand_val == 2) obstacles[i].action = 'r';
+    }
   }
   //make sure we have at leats one accelerator
   int rand_obstacle = (int)random(0, 3) * 2;
