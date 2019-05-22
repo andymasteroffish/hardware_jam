@@ -1,4 +1,5 @@
 #include <Adafruit_DotStar.h>
+#include <Adafruit_NeoPixel.h>  //lol yes we're using dot star and neopixel the absolute madman
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 
 #define NUM_COLS 96
@@ -112,6 +113,10 @@ int settings_timer_to_trigger = 150;
 
 int global_brightness_setting = 5;    //this is an int value that gets cycled in settings mode
 float global_brightness =  1.0f;
+
+//Neopixel lights in the buttons
+#define NEO_PIXEL_PIN   8
+Adafruit_NeoPixel button_pixels = Adafruit_NeoPixel(NUM_BUTTONS, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 //LEDs
 //this is ugly, but putting them in an array from the start keeps failing
@@ -243,6 +248,10 @@ void setup() {
   pix4.begin();
   pix4.show();
 
+  //buttons
+  button_pixels.begin();
+
+  
   if (debug_skip_intro) {
     reset();
     gameState = STATE_GAME;
@@ -354,6 +363,7 @@ void loop() {
 
   //displaying the thing
   setLEDs();
+  button_pixels.show(); 
 
   if (use_debug_serial_display && num_queued_debug_display > 0) {
     sendDebugDisplayMessage();
@@ -616,15 +626,24 @@ void displayGame() {
     }
 
     //add the obstacles
-    //if (players[0].dist_traveled >= NUM_COLS){    //only drawing if players have gone aorund once
-      for (int i = 0; i < NUM_OBSTACLES; i++) {
-        for (int r = 0; r < NUM_ROWS; r++) {
-          if (obstacles[i].onRows[r]) {
-            pixel [obstacles[i].x][r] = obstacles[i].action;
-          }
+    for (int i = 0; i < NUM_OBSTACLES; i++) {
+      for (int r = 0; r < NUM_ROWS; r++) {
+        if (obstacles[i].onRows[r]) {
+          pixel [obstacles[i].x][r] = obstacles[i].action;
         }
       }
-    //}
+    }
+
+    //set the button colors
+    //I ripped this from setLEDs() but the R and G values were flipped
+    for (int i = 0; i < NUM_OBSTACLES; i++) {
+        uint32_t color;
+        if (obstacles[i].action == 'b') color = button_pixels.Color(100*global_brightness,   0*global_brightness, 0*global_brightness);
+        if (obstacles[i].action == 's') color = button_pixels.Color(100*global_brightness, 100*global_brightness, 100*global_brightness);
+        if (obstacles[i].action == 'a') color = button_pixels.Color(0*global_brightness, 100*global_brightness,   0*global_brightness);
+        if (obstacles[i].action == 'r') color = button_pixels.Color(100*global_brightness,   0*global_brightness, 100*global_brightness);
+        button_pixels.setPixelColor(i, color); 
+    }
 
     //add the players over them
     for (int i = 0; i < num_players; i++) {
@@ -716,6 +735,16 @@ void displayIntro() {
       pixel[mod][y] = 'b';
     }
   }
+
+  //messing with the buttons
+  for (int i=0; i<NUM_BUTTONS; i++){
+    float prc = abs( sin( ((float)millis()/1000.0)));
+    float r = 216.0 * prc;
+    float g = 89.0 * prc;
+    float b = 255.0 * prc;
+    
+    button_pixels.setPixelColor(i, button_pixels.Color(r,g,b)); 
+  }
 }
 
 void displayPregame() {
@@ -784,6 +813,11 @@ void displayPregame() {
     Serial.println("go to game");
     gameState = STATE_GAME;
   }
+
+  //set the buttons
+  for (int i=0; i<NUM_BUTTONS; i++){
+    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
+  }
 }
 
 //get to settings by holding several buttons down at once during the intro
@@ -826,6 +860,11 @@ void displayWinner(int player) {
     gameState = STATE_INTRO;
     button_lock_timer = millis() + button_lock_time;
   }
+
+  //set the buttons
+  for (int i=0; i<NUM_BUTTONS; i++){
+    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
+  }
 }
 
 void displaySettings(){
@@ -853,6 +892,11 @@ void displaySettings(){
   pixel[check_x+0][2] = 'a';
   pixel[check_x+1][1] = 'a';
   pixel[check_x+2][0] = 'a'; 
+
+  //set the buttons
+  for (int i=0; i<NUM_BUTTONS; i++){
+    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
+  }
 }
 
 void button_pressed_settings(int id) {
@@ -909,11 +953,6 @@ void setLEDs() {
       if (pixel[x][y] != last_sent_grid[x][y]) {
         char col_char = pixel[x][y];
         uint32_t color = 0x000000;  //'-' (ascii 45)
-
-//        if (col_char == 'b') color = 0x004400;  //blocked (ascii 98)
-//        if (col_char == 's') color = 0x444444;  //shifter (ascii 115)
-//        if (col_char == 'a') color = 0x440000;  //accelerator (ascii 97)
-//        if (col_char == 'r') color = 0x004444;  //reverse (ascii 114)
 
         if (col_char == 'b') color = pix0.Color(0*global_brightness,   100*global_brightness, 0*global_brightness);
         if (col_char == 's') color = pix0.Color(100*global_brightness, 100*global_brightness, 100*global_brightness);
