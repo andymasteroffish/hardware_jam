@@ -36,4 +36,7 @@ struct Button {
   int next_check_time;  //for debounce
   bool is_held;
   char key;
+
+  uint32_t col;
+  int led_id;
 };

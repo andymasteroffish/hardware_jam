@@ -97,6 +97,8 @@ void setup() {
   for (int i = 0; i < NUM_BUTTONS; i++) {
     buttons[i].next_check_time = 0;
     buttons[i].is_held = false;
+    buttons[i].led_id = (i+3) % NUM_BUTTONS;
+    buttons[i].col = 0;
     pinMode(buttons[i].pin, INPUT_PULLUP);
   }
 
@@ -150,11 +152,6 @@ void reset() {
   //  Serial.print(another_massage);
   obstacles[rand_obstacle].action = 'a';
 
-  //kill me
-  obstacles[0].action = 'a';
-  obstacles[2].action = 's';
-  obstacles[4].action = 'r';
-  obstacles[6].action = 'a';
 
   String ("done setting obstacles");
 
@@ -237,7 +234,6 @@ void loop() {
 
   //displaying the thing
   setLEDs();
-  button_pixels.show(); 
 
   if (use_debug_serial_display && num_queued_debug_display > 0) {
     sendDebugDisplayMessage();
@@ -258,6 +254,7 @@ void runGame() {
   winner = checkWinners(); //winner remains -1 if no winner
   if (winner != -1 && gameState == STATE_GAME && !checkDeathAnimations()) {
     gameState = STATE_GAMEOVER;
+    game_over_time = millis();
     end_game_over_time = millis() + max_game_over_time;
     //if the game just ended, lock the buttons for a bit
     button_lock_timer = millis() + button_lock_time;
@@ -518,8 +515,9 @@ void displayGame() {
         if (obstacles[i].action == 's') color = button_pixels.Color(bright*global_brightness, bright*global_brightness, bright*global_brightness);
         if (obstacles[i].action == 'a') color = button_pixels.Color(0*global_brightness, bright*global_brightness,   soft*global_brightness);
         if (obstacles[i].action == 'r') color = button_pixels.Color(bright*global_brightness,   soft*global_brightness, bright*global_brightness);
-        int button_id = (i+3)%NUM_OBSTACLES;
-        button_pixels.setPixelColor( button_id, color); 
+        //int button_id = (i+3)%NUM_OBSTACLES;
+        buttons[i].col = color;
+        //button_pixels.setPixelColor( buttons[i].led_id, color); 
     }
 
     //add the players over them
@@ -615,12 +613,12 @@ void displayIntro() {
 
   //messing with the buttons
   for (int i=0; i<NUM_BUTTONS; i++){
-    float prc = abs( sin( ((float)millis()/1000.0)));
-    float r =  216.0 * prc;
-    float g = 89.0 * prc;
-    float b = 255;//255.0 * prc;
-    
-    button_pixels.setPixelColor(i, button_pixels.Color(r,g,b)); 
+//    float prc = abs( sin( ((float)millis()/1000.0)));
+//    float r =  216.0 * prc;
+//    float g = 89.0 * prc;
+//    float b = 255;//255.0 * prc;
+//    
+//    button_pixels.setPixelColor(i, button_pixels.Color(r,g,b)); 
   }
 }
 
@@ -692,9 +690,9 @@ void displayPregame() {
   }
 
   //set the buttons
-  for (int i=0; i<NUM_BUTTONS; i++){
-    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
-  }
+//  for (int i=0; i<NUM_BUTTONS; i++){
+//    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
+//  }
 }
 
 //get to settings by holding several buttons down at once during the intro
@@ -720,28 +718,33 @@ bool check_holding_for_settings() {
 void displayWinner(int player) {
   int mod = (millis() / 50) % NUM_COLS;
   //println("PLAYER " + player + " WON!!!" + " mod=" + mod);
-  for (int y = 0; y < NUM_ROWS; y++) {
-    for (int x = 0; x < NUM_COLS; x++) {
-      int loc = x + y * NUM_COLS;
-      pixel[x][y] = players[player].identifier;// Integer.toString(player).charAt(0);
-      if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = '-';
-    }
-  }
 
-  String title_text = "winner";
-  //int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
-  int title_x = NUM_COLS - (millis() / 100) %  NUM_COLS;
-  printWord(title_text,  players[player].identifier, title_x, true);
+  bool show_flash = millis() < game_over_time + 500;
+  if (show_flash){
+    for (int y = 0; y < NUM_ROWS; y++) {
+      for (int x = 0; x < NUM_COLS; x++) {
+        int loc = x + y * NUM_COLS;
+        pixel[x][y] = players[player].identifier;// Integer.toString(player).charAt(0);
+        if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = '-';
+      }
+    }
+  }  
+  else{
+    String title_text = "winner winner";
+    //int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
+    int title_x = NUM_COLS - (millis() / 100) %  NUM_COLS;
+    printWord(title_text,  players[player].identifier, title_x, true);
+  }
 
   if (millis() > end_game_over_time) {
     gameState = STATE_INTRO;
     button_lock_timer = millis() + button_lock_time;
   }
 
-  //set the buttons
-  for (int i=0; i<NUM_BUTTONS; i++){
-    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
-  }
+//  //set the buttons
+//  for (int i=0; i<NUM_BUTTONS; i++){
+//    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
+//  }
 }
 
 void displaySettings(){
@@ -770,10 +773,6 @@ void displaySettings(){
   pixel[check_x+1][1] = 'a';
   pixel[check_x+2][0] = 'a'; 
 
-  //set the buttons
-  for (int i=0; i<NUM_BUTTONS; i++){
-    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
-  }
 }
 
 void button_pressed_settings(int id) {
@@ -887,6 +886,12 @@ void setLEDs() {
       }
     }
   }
+
+  //update the button colors
+  for (int i=0; i<NUM_BUTTONS; i++){
+    button_pixels.setPixelColor( buttons[i].led_id, buttons[i].col);
+  }
+  button_pixels.show();
 }
 
 

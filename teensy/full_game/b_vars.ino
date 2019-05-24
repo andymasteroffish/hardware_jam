@@ -1,7 +1,8 @@
 
+
 boolean use_debug_serial_display = false;
-boolean debug_skip_intro = true;
-boolean debug_no_death = true;
+boolean debug_skip_intro = false;
+boolean debug_no_death = false;
 
 //game values
 int startSpeed = 230;  //measured in millis between steps
@@ -23,16 +24,13 @@ int playerStarts[MAX_NUM_PLAYERS];
 int winner = -1;
 //boolean gameOver = false;
 //boolean gameBegun = false;
-#define STATE_INTRO 0
-#define STATE_PREGAME 1
-#define STATE_GAME 2
-#define STATE_GAMEOVER 3
-#define STATE_SETTINGS 4
+
 int gameState = STATE_INTRO;
 
 //timing out game over
 int max_game_over_time = 15000;
 int end_game_over_time = 0;
+int game_over_time = 0;
 
 int deathAnimStepTime = 150;
 
@@ -50,7 +48,7 @@ int num_queued_debug_display = 0;
 
 //buttons
 int debounce_time = 50; //millis
-#define NUM_BUTTONS 8
+
 Button buttons[NUM_BUTTONS];
 
 int button_lock_timer = 0;
@@ -64,7 +62,7 @@ int global_brightness_setting = 5;    //this is an int value that gets cycled in
 float global_brightness =  1.0f;
 
 //Neopixel lights in the buttons
-#define NEO_PIXEL_PIN   8
+
 Adafruit_NeoPixel button_pixels = Adafruit_NeoPixel(NUM_BUTTONS, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 //LEDs
