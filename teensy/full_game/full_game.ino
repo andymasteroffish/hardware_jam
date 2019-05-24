@@ -12,8 +12,8 @@
 #define LETTER_WIDTH 5
 
 boolean use_debug_serial_display = false;
-boolean debug_skip_intro = false;
-boolean debug_no_death = false;
+boolean debug_skip_intro = true;
+boolean debug_no_death = true;
 
 //game values
 int startSpeed = 230;  //measured in millis between steps
@@ -281,6 +281,12 @@ void reset() {
   //  String another_massage = "set obstacle" + String(rand_obstacle);
   //  Serial.print(another_massage);
   obstacles[rand_obstacle].action = 'a';
+
+  //kill me
+  obstacles[0].action = 'a';
+  obstacles[2].action = 's';
+  obstacles[4].action = 'r';
+  obstacles[6].action = 'a';
 
   String ("done setting obstacles");
 
@@ -638,11 +644,14 @@ void displayGame() {
     //I ripped this from setLEDs() but the R and G values were flipped
     for (int i = 0; i < NUM_OBSTACLES; i++) {
         uint32_t color;
-        if (obstacles[i].action == 'b') color = button_pixels.Color(100*global_brightness,   0*global_brightness, 0*global_brightness);
-        if (obstacles[i].action == 's') color = button_pixels.Color(100*global_brightness, 100*global_brightness, 100*global_brightness);
-        if (obstacles[i].action == 'a') color = button_pixels.Color(0*global_brightness, 100*global_brightness,   0*global_brightness);
-        if (obstacles[i].action == 'r') color = button_pixels.Color(100*global_brightness,   0*global_brightness, 100*global_brightness);
-        button_pixels.setPixelColor(i, color); 
+        int bright = 255;
+        int soft = 20;
+        if (obstacles[i].action == 'b') color = button_pixels.Color(bright*global_brightness,   soft*global_brightness, soft*global_brightness);
+        if (obstacles[i].action == 's') color = button_pixels.Color(bright*global_brightness, bright*global_brightness, bright*global_brightness);
+        if (obstacles[i].action == 'a') color = button_pixels.Color(0*global_brightness, bright*global_brightness,   soft*global_brightness);
+        if (obstacles[i].action == 'r') color = button_pixels.Color(bright*global_brightness,   soft*global_brightness, bright*global_brightness);
+        int button_id = (i+3)%NUM_OBSTACLES;
+        button_pixels.setPixelColor( button_id, color); 
     }
 
     //add the players over them
@@ -739,9 +748,9 @@ void displayIntro() {
   //messing with the buttons
   for (int i=0; i<NUM_BUTTONS; i++){
     float prc = abs( sin( ((float)millis()/1000.0)));
-    float r = 216.0 * prc;
+    float r =  216.0 * prc;
     float g = 89.0 * prc;
-    float b = 255.0 * prc;
+    float b = 255;//255.0 * prc;
     
     button_pixels.setPixelColor(i, button_pixels.Color(r,g,b)); 
   }
