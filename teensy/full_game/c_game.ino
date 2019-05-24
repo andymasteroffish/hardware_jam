@@ -526,7 +526,7 @@ void displayGame() {
     for (int i = 0; i < NUM_OBSTACLES; i++) {
         uint32_t color;
         int bright = 255;
-        int soft = 20;
+        int soft = 0;
         if (obstacles[i].action == 'b') color = button_pixels.Color(bright*global_brightness,   soft*global_brightness, soft*global_brightness);
         if (obstacles[i].action == 's') color = button_pixels.Color(bright*global_brightness, bright*global_brightness, bright*global_brightness);
         if (obstacles[i].action == 'a') color = button_pixels.Color(0*global_brightness, bright*global_brightness,   soft*global_brightness);
@@ -628,13 +628,42 @@ void displayIntro() {
   }
 
   //messing with the buttons
+//  int light_offset = (millis()/100) % NUM_BUTTONS;
+//
+  float time_val = ((float)millis()/1000.0) * 4;
+  float anim_time = time_val;
+  float anim_range = 2.0f;
+  
+  int steps = NUM_BUTTONS+4;
+  while(anim_time > (float)steps){
+    anim_time -= (float)steps;
+  }
+  anim_time -= 2;
+  
+
+  Serial.println(anim_time);
+ 
   for (int i=0; i<NUM_BUTTONS; i++){
-//    float prc = abs( sin( ((float)millis()/1000.0)));
-//    float r =  216.0 * prc;
-//    float g = 89.0 * prc;
-//    float b = 255;//255.0 * prc;
-//    
-//    button_pixels.setPixelColor(i, button_pixels.Color(r,g,b)); 
+    float r = 255;
+    float g = 0;
+    float b = 255;
+
+    float prc = 0;
+
+    
+    float this_time = abs(anim_time-( (NUM_BUTTONS-1-i)+1));
+    if (this_time < anim_range){
+      prc = 1.0 - this_time / (float)anim_range;
+      
+      //prc = 1;
+    }
+
+    if (i==1){
+      Serial.println(this_time);
+    }
+    
+    buttons[i].col = button_pixels.Color(r*prc,g*prc,b*prc); 
+    
   }
 }
 
