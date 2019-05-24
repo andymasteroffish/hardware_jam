@@ -22,10 +22,10 @@ Player players[MAX_NUM_PLAYERS];
 int playerStarts[MAX_NUM_PLAYERS];
 
 int winner = -1;
-//boolean gameOver = false;
-//boolean gameBegun = false;
-
 int gameState = STATE_INTRO;
+
+int delta_millis;
+int prev_frame_millis;
 
 //timing out game over
 int max_game_over_time = 15000;
@@ -53,6 +53,12 @@ Button buttons[NUM_BUTTONS];
 
 int button_lock_timer = 0;
 int button_lock_time = 1000;
+
+//join screen
+int join_sreen_start_time;
+int join_screen_time_limit = 5000;
+bool player_joined[MAX_NUM_PLAYERS];
+int join_screen_end_timer;
 
 //going to settings mode
 int settings_timer = 0;

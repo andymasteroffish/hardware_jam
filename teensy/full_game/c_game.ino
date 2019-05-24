@@ -30,9 +30,9 @@ void setup() {
   players[2].g = 200;//255;
   players[2].b = 0;//136;
 
-  playerStarts[0] = 3;
-  playerStarts[1] = 15;
-  playerStarts[2] = 30;
+  playerStarts[0] = 8;
+  playerStarts[1] = 20;
+  playerStarts[2] = 31;
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -121,6 +121,8 @@ void setup() {
   //buttons
   button_pixels.begin();
 
+  delta_millis = 0;
+  prev_frame_millis = millis();
   
   if (debug_skip_intro) {
     reset();
@@ -219,14 +221,26 @@ void reset() {
   }
 
   next_speed_up_time = millis();
+}
 
+void startJoinScreen(){
+  gameState = STATE_JOIN;
+  join_sreen_start_time = millis();
+  join_screen_end_timer = 1500;
+  for (int i=0; i<MAX_NUM_PLAYERS; i++){
+    player_joined[i] = false;
+  }
+  resetMatrix();
 }
 
 void loop() {
+  delta_millis = millis() - prev_frame_millis;
+  prev_frame_millis = millis();
   checkInput();
 
   //Serial.println(gameState);
   if (gameState == STATE_INTRO)          displayIntro();
+  else if (gameState == STATE_JOIN)      displayJoin();
   else if (gameState == STATE_PREGAME)   displayPregame();
   else if (gameState == STATE_GAME)      runGame();
   else if (gameState == STATE_GAMEOVER)  displayWinner(winner);
@@ -432,10 +446,12 @@ void button_pressed(int id) {
   }
   //reset the game if we're not playing
   if (gameState == STATE_INTRO) {
-    reset();
-    pregameStep = 0;
-    nextPregameStepTime = millis();
-  } else if (gameState == STATE_GAMEOVER) {
+    startJoinScreen();
+  }else if (gameState == STATE_JOIN){
+    if (id < num_players){
+      player_joined[id] = true;
+    }
+  }else if (gameState == STATE_GAMEOVER) {
     gameState = STATE_INTRO;
     button_lock_timer = millis() + button_lock_time;
   }
@@ -619,6 +635,120 @@ void displayIntro() {
 //    float b = 255;//255.0 * prc;
 //    
 //    button_pixels.setPixelColor(i, button_pixels.Color(r,g,b)); 
+  }
+}
+
+void displayJoin(){
+  resetMatrix();
+  
+  float time_on_screen = (millis()-join_sreen_start_time)/1000.0;
+
+  //pulse the buttons
+  for (int i=0; i<num_players; i++){
+    //good ol' grb color in the players
+    float r = (int)players[i].g;
+    float g = (int)players[i].r;
+    float b = (int)players[i].b;
+
+    float prc = 0.5 +sin(time_on_screen*10) * 0.5;
+
+    if (player_joined[i]){
+      prc = 1;
+    }
+
+    //fade between colors
+    r = (1.0-prc) * 0 + prc * r;
+    g = (1.0-prc) * 0 + prc * g;
+    b = (1.0-prc) * 0 + prc * b;
+    
+    buttons[i].col = button_pixels.Color(r,g,b);
+  }
+  //blank other buttons
+  for (int i=num_players; i<NUM_BUTTONS; i++){
+     buttons[i].col = 0;
+  }
+
+  //show who's there
+  int col_w = 5;
+  for (int i=0; i<num_players; i++){
+    if (player_joined[i]){
+      int start_x = playerStarts[i] - 2;
+      for (int x=start_x; x<start_x+col_w; x++){
+        for (int y=0; y<NUM_ROWS; y++){
+          pixel[x][y] = players[i].identifier; 
+        }
+      }
+    }
+  }
+
+  //time to move on?
+  int num_in = 0;
+  for (int i=0; i<num_players; i++){
+    if (player_joined[i]){
+      num_in++;
+    }
+  }
+  if (num_in == num_players){
+    join_screen_end_timer -= delta_millis;
+  }
+
+  if (join_screen_end_timer < 0){
+    reset();
+    pregameStep = 0;
+    nextPregameStepTime = millis();
+  }
+
+  //gentle arrows to direct players
+  if (num_in < num_players){
+    int opposite_x = playerStarts[1] + NUM_COLS/2;
+    int arrow_track_length = 29;
+    int arrow_length = 6;
+    int frame = (millis()/100) % (arrow_track_length+arrow_length+arrow_length) -arrow_length;
+    Serial.println(frame);
+    
+    int left_x = opposite_x + frame;
+    int right_x = opposite_x - frame;
+    
+    for (int x=left_x; x<left_x+arrow_length; x++){
+       for (int y=0; y<NUM_ROWS; y++){
+        bool fill_in = false;
+        if (y==2){
+          fill_in = true;
+        }
+        if ( (y==1 || y == 3) && x==left_x+4){
+          fill_in = true;
+        }
+        if ( (y==0 || y == 4) && x==left_x+3){
+          fill_in = true;
+        }
+        if (x > opposite_x + arrow_track_length || x < opposite_x){
+          fill_in = false;
+        }
+        if (fill_in){
+          pixel[x%NUM_COLS][y] = 'a';
+        }
+       }
+    }
+    for (int x=right_x; x>right_x-arrow_length; x--){
+       for (int y=0; y<NUM_ROWS; y++){
+        bool fill_in = false;
+        if (y==2){
+          fill_in = true;
+        }
+        if ( (y==1 || y == 3) && x==right_x-4){
+          fill_in = true;
+        }
+        if ( (y==0 || y == 4) && x==right_x-3){
+          fill_in = true;
+        }
+        if (x < opposite_x - arrow_track_length || x > opposite_x){
+          fill_in = false;
+        }
+        if (fill_in){
+          pixel[x%NUM_COLS][y] = 'a';
+        }
+       }
+    }
   }
 }
 
