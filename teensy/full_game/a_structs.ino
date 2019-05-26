@@ -17,9 +17,9 @@ struct Player {
   int nextMoveTime;   //when the next move will occur
   int dir;            //1 is normal, -1 is reverse
   char identifier;
-  unsigned char r;
-  unsigned char g;
-  unsigned char b;
+  int r;
+  int g;
+  int b;
   int pX[MAX_TRAILS];
 
   int dist_traveled;
@@ -40,3 +40,12 @@ struct Button {
   uint32_t col;
   int led_id;
 };
+
+//color
+struct Color {
+  int r;
+  int g;
+  int b;
+};
+
+

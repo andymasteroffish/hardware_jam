@@ -35,8 +35,8 @@ int game_over_time = 0;
 int deathAnimStepTime = 150;
 
 //maintaining pixels
-char pixel[NUM_COLS][NUM_ROWS];
-char last_sent_grid[NUM_COLS][NUM_ROWS];
+uint32_t pixel[NUM_COLS][NUM_ROWS];
+uint32_t last_sent_grid[NUM_COLS][NUM_ROWS];
 
 //pregame intro
 int pregameStep = 0;
@@ -84,3 +84,10 @@ Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS + 1 , 15, 16, DOTSTAR_BRG); //
 //trakcing which columns have changed this frame
 int updatedCols[10];
 int numUpdatedCols = 0;
+
+//game colors
+uint32_t blank_col;
+Color blocker_col;
+Color shifter_col;
+Color accelerator_col;
+Color reverse_col;

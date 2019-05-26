@@ -123,7 +123,27 @@ void setup() {
 
   delta_millis = 0;
   prev_frame_millis = millis();
+
+  //some default colors
+  blank_col = 0x000000;
   
+  blocker_col.r = 100;
+  blocker_col.g = 0;
+  blocker_col.b = 0;
+
+  shifter_col.r = 100;
+  shifter_col.g = 100;
+  shifter_col.b = 100;
+
+  accelerator_col.r = 0;
+  accelerator_col.g = 100;
+  accelerator_col.b = 0;
+
+  reverse_col.r = 100;
+  reverse_col.g = 0;
+  reverse_col.b = 100;
+  
+  //go right to the game if we're tetsing
   if (debug_skip_intro) {
     reset();
     gameState = STATE_GAME;
@@ -491,32 +511,39 @@ void displayGame() {
 
       //starter trail
       if (players[i].speed > startSpeed * speedMult) {
-        pixel[trail_x_1][players[i].y] = players[i].identifier + 8;
-        //pixel[trail_x_2][players[i].y] = players[i].identifier + 8;
-      } else if (players[i].speed <= startSpeed * speedMult) { // && players[i].speed >= startSpeed * (speedMult * 2)) {
+        float power = 0.02f;
+        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+        //players[i].identifier + 8;
+      } else if (players[i].speed <= startSpeed * speedMult) {
         //mid trail
-        pixel[trail_x_1][players[i].y] = players[i].identifier + 3;
-        pixel[trail_x_1][players[i].y] = players[i].identifier + 5;
-        pixel[trail_x_2][players[i].y] = players[i].identifier + 7;
-      } /*else{
-        //fast trail
-        pixel[trail_x_1][players[i].y] = players[i].identifier + 4;
-        pixel[trail_x_2][players[i].y] = players[i].identifier + 6;
-        pixel[trail_x_3][players[i].y] = players[i].identifier + 7;
-        pixel[trail_x_4][players[i].y] = players[i].identifier + 8;
-      }*/
+//        pixel[trail_x_1][players[i].y] = players[i].identifier + 3;
+//        pixel[trail_x_1][players[i].y] = players[i].identifier + 5;
+//        pixel[trail_x_2][players[i].y] = players[i].identifier + 7;
+        float power = 0.1f;
+        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+        power = 0.06f;
+        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+        power = 0.03f;
+        pixel[trail_x_2][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+      }
     } else {
       //Serial.println("dead trails");
-      pixel[trail_x_1][players[i].y] = '-';
-      pixel[trail_x_2][players[i].y] = '-';
-      pixel[trail_x_3][players[i].y] = '-';
+      pixel[trail_x_1][players[i].y] = blank_col;
+      pixel[trail_x_2][players[i].y] = blank_col;
+      pixel[trail_x_3][players[i].y] = blank_col;
     }
 
     //add the obstacles
     for (int i = 0; i < NUM_OBSTACLES; i++) {
       for (int r = 0; r < NUM_ROWS; r++) {
         if (obstacles[i].onRows[r]) {
-          pixel [obstacles[i].x][r] = obstacles[i].action;
+          //pixel [obstacles[i].x][r] = obstacles[i].action;
+          uint32_t color = blank_col;
+          if (obstacles[i].action == 'b') color = pix0.Color(blocker_col.r*global_brightness,   blocker_col.g*global_brightness, blocker_col.b*global_brightness);
+          if (obstacles[i].action == 's') color = pix0.Color(shifter_col.r*global_brightness, shifter_col.g*global_brightness, shifter_col.b*global_brightness);
+          if (obstacles[i].action == 'a') color = pix0.Color(accelerator_col.r*global_brightness, accelerator_col.g*global_brightness,   accelerator_col.b*global_brightness);
+          if (obstacles[i].action == 'r') color = pix0.Color(reverse_col.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
+          pixel [obstacles[i].x][r] = color;
         }
       }
     }
@@ -539,7 +566,7 @@ void displayGame() {
     //add the players over them
     for (int i = 0; i < num_players; i++) {
       if(players[i].speed > 0){
-        //sometime splayer x position is garbage data
+        //sometimes player x position is garbage data
         //this is a sloppy solution, but it was causing crashes and I need to go home soon
         if (players[i].x < 0 || players[i].x >= NUM_COLS) {
           players[i].x = playerStarts[i];
@@ -548,10 +575,10 @@ void displayGame() {
         //      Serial.println("this player x");
         //      Serial.println(players[i].x);
         if (!players[i].doingDeathAnim && players[i].speed != 0) {
-          pixel[players[i].x][players[i].y] = players[i].identifier; //full power
+          pixel[players[i].x][players[i].y] = pix0.Color( players[i].r,  players[i].g,  players[i].b);// players[i].identifier; //full power
         }
         else {
-          pixel[players[i].x][players[i].y] = '-';
+          pixel[players[i].x][players[i].y] = 0x000000;
         }
       }
     }
@@ -572,15 +599,16 @@ void displayGame() {
         //add them to the pixels (last few frames are blank)
         if (players[i].deathAnimStep < 3) {
           //diagonal
-          if (y_top >= 0)        pixel[x_left][y_top] = players[i].identifier + players[i].deathAnimStep; //add the step # so player death particles become 10% weaker each step
-          if (y_bot < NUM_ROWS)  pixel[x_left][y_bot] = players[i].identifier + players[i].deathAnimStep;
-          if (y_top >= 0)        pixel[x_right][y_top] = players[i].identifier + players[i].deathAnimStep;
-          if (y_bot < NUM_ROWS)  pixel[x_right][y_bot] = players[i].identifier + players[i].deathAnimStep;
+          float power = 0.5 - (float)players[i].deathAnimStep * 0.1;
+          if (y_top >= 0)        pixel[x_left][y_top] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);// players[i].identifier + players[i].deathAnimStep; //add the step # so player death particles become 10% weaker each step
+          if (y_bot < NUM_ROWS)  pixel[x_left][y_bot] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+          if (y_top >= 0)        pixel[x_right][y_top] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+          if (y_bot < NUM_ROWS)  pixel[x_right][y_bot] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
 
           //horizontal
           if (y_mid >= 0 && y_mid < NUM_ROWS) {
-            pixel[x_left][players[i].y] = players[i].identifier + players[i].deathAnimStep;
-            pixel[x_right][players[i].y] = players[i].identifier + players[i].deathAnimStep;
+            pixel[x_left][players[i].y] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+            pixel[x_right][players[i].y] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
           }
         }
 
@@ -603,29 +631,27 @@ void displayIntro() {
   String abc = "-bsar01";
   //println("mod=" + mod);
 
-  //normal display
-  if (!use_debug_serial_display) {
-
-    //flashing
-    for (int y = 0; y < NUM_ROWS; y++) {
-      for (int x = 0; x < NUM_COLS; x++) {
-        int loc = x + mod + y * NUM_COLS;
-        pixel[x][y] = abc.charAt(loc % abc.length());
+  //flashing
+  for (int y = 0; y < NUM_ROWS; y++) {
+    for (int x = 0; x < NUM_COLS; x++) {
+      int loc = x + mod + y * NUM_COLS;
+      //pixel[x][y] = abc.charAt(loc % abc.length());
+      //PLACEHOLDER TESTING
+      if (loc % 2 == 0){
+        pixel[x][y] = pix0.Color(reverse_col.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
+      }else{
+        pixel[x][y] = blank_col;
       }
-    }
-
-    //show the title
-    String title_text = "circumnavigators";
-    int title_x = NUM_COLS - (millis() / 70) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
-    printWord(title_text, 'r', title_x);
-  }
-
-  //debug display with fewer changing pixels
-  else {
-    for (int y = 0; y < NUM_ROWS; y++) {
-      pixel[mod][y] = 'b';
+      
     }
   }
+
+  //show the title
+  String title_text = "circumnavigators";
+  int title_x = NUM_COLS - (millis() / 70) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
+  uint32_t text_col = pix0.Color(reverse_col.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
+  printWord(title_text, text_col, title_x);
+  
 
   //messing with the buttons
 //  int light_offset = (millis()/100) % NUM_BUTTONS;
@@ -641,7 +667,7 @@ void displayIntro() {
   anim_time -= 2;
   
 
-  Serial.println(anim_time);
+  //Serial.println(anim_time);
  
   for (int i=0; i<NUM_BUTTONS; i++){
     float r = 255;
@@ -704,7 +730,7 @@ void displayJoin(){
       int start_x = playerStarts[i] - 2;
       for (int x=start_x; x<start_x+col_w; x++){
         for (int y=0; y<NUM_ROWS; y++){
-          pixel[x][y] = players[i].identifier; 
+          pixel[x][y] = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness); 
         }
       }
     }
@@ -806,24 +832,26 @@ void displayPregame() {
       int x1 = (playerStarts[p] + i) % NUM_COLS;
       int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
 
+      uint32_t player_col = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness);
+
       if (i != trackPos - 3) {
-        pixel[x1][players[p].y] = players[p].identifier;
-        pixel[x2][players[p].y] = players[p].identifier;
+        pixel[x1][players[p].y] = player_col;
+        pixel[x2][players[p].y] = player_col;
       }
 
       //arrow tail
       if (i == trackPos - 1) {
         int x1Shift = (x1 + 1) % NUM_COLS;
         int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
-        pixel[x1][players[p].y - 1] = players[p].identifier;
-        pixel[x1Shift][players[p].y - 1] = players[p].identifier;
-        pixel[x1Shift][players[p].y + 1] = players[p].identifier;
-        pixel[x1][players[p].y + 1] = players[p].identifier;
+        pixel[x1][players[p].y - 1] = player_col;
+        pixel[x1Shift][players[p].y - 1] = player_col;
+        pixel[x1Shift][players[p].y + 1] = player_col;
+        pixel[x1][players[p].y + 1] = player_col;
 
-        pixel[x2][players[p].y - 1] = players[p].identifier;
-        pixel[x2Shift][players[p].y - 1] = players[p].identifier;
-        pixel[x2Shift][players[p].y + 1] = players[p].identifier;
-        pixel[x2][players[p].y + 1] = players[p].identifier;
+        pixel[x2][players[p].y - 1] = player_col;
+        pixel[x2Shift][players[p].y - 1] = player_col;
+        pixel[x2Shift][players[p].y + 1] = player_col;
+        pixel[x2][players[p].y + 1] = player_col;
       }
     }
   }
@@ -838,7 +866,8 @@ void displayPregame() {
 
     //make sure the players are shown
     for (int i = 0; i < num_players; i++) {
-      pixel[players[i].x][players[i].y] = players[i].identifier;
+      uint32_t player_col = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness);
+      pixel[players[i].x][players[i].y] = player_col;
     }
   }
 
@@ -883,8 +912,9 @@ void displayWinner(int player) {
     for (int y = 0; y < NUM_ROWS; y++) {
       for (int x = 0; x < NUM_COLS; x++) {
         int loc = x + y * NUM_COLS;
-        pixel[x][y] = players[player].identifier;// Integer.toString(player).charAt(0);
-        if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = '-';
+        uint32_t player_col = pix0.Color(players[player].r*global_brightness, players[player].g*global_brightness, players[player].b*global_brightness);
+        pixel[x][y] = player_col;
+        if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = blank_col;
       }
     }
   }  
@@ -892,7 +922,8 @@ void displayWinner(int player) {
     String title_text = "winner winner";
     //int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
     int title_x = NUM_COLS - (millis() / 100) %  NUM_COLS;
-    printWord(title_text,  players[player].identifier, title_x, true);
+    uint32_t player_col = pix0.Color(players[player].r*global_brightness, players[player].g*global_brightness, players[player].b*global_brightness);
+    printWord(title_text,  player_col, title_x, true);
   }
 
   if (millis() > end_game_over_time) {
@@ -973,7 +1004,7 @@ void button_pressed_settings(int id) {
 void resetMatrix() {
   for (int y = 0; y < NUM_ROWS; y++) {
     for (int x = 0; x < NUM_COLS; x++) {
-      pixel[x][y] = '-';
+      pixel[x][y] = blank_col;
     }
   }
 }
@@ -986,46 +1017,13 @@ void setLEDs() {
 
       //chekc if this pixel has changed
       if (pixel[x][y] != last_sent_grid[x][y]) {
-        char col_char = pixel[x][y];
-        uint32_t color = 0x000000;  //'-' (ascii 45)
-
-        if (col_char == 'b') color = pix0.Color(0*global_brightness,   100*global_brightness, 0*global_brightness);
-        if (col_char == 's') color = pix0.Color(100*global_brightness, 100*global_brightness, 100*global_brightness);
-        if (col_char == 'a') color = pix0.Color(100*global_brightness, 0*global_brightness,   0*global_brightness);
-        if (col_char == 'r') color = pix0.Color(0*global_brightness,   100*global_brightness, 100*global_brightness);
-
-        if (col_char / 10 == 0) { //p1
-          float pct = (10.0 - col_char % 10) / 10.0;
-          if (pct != 1.0) pct /= 10; //lowering the trails to 1/10 power
-          color = pix0.Color(players[0].r * pct*global_brightness, players[0].g * pct*global_brightness, players[0].b * pct*global_brightness); //just using the dotstar class to store the color
-        }
-        if (col_char / 10 == 1) { //p2
-          float pct = (10.0 - col_char % 10) / 10.0;
-          if (pct != 1.0) pct /= 10; //lowering the trails to 1/10 power
-          color = pix0.Color(players[1].r * pct*global_brightness, players[1].g * pct*global_brightness, players[1].b * pct*global_brightness);
-        }
-
-        if (col_char / 10 == 2) { //p3
-          float pct = (10.0 - col_char % 10) / 10.0;
-          color = pix0.Color(players[2].r * pct*global_brightness, players[2].g * pct*global_brightness, players[2].b * pct*global_brightness);
-        }
-
-        //if (col_char == '0') color = 0x000088;  //p1
-        //if (col_char == '1') color = 0x888800;  //p2
-        //if (col_char == '2') color = 0x000044;  //p3
-
-
-        if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , color);
-        if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x - 1, color);
-        if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , color);
-        if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , color);
-        if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , color);
+        if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
+        if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x - 1, pixel[x][y]);
+        if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
+        if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
+        if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
 
         anythingChanged = true;
-
-        if (use_debug_serial_display) {
-          debugDisplay(x, y, col_char);
-        }
       }
     }
   }
