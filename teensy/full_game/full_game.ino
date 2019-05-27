@@ -32,7 +32,7 @@ boolean debug_skip_intro = false;
 boolean debug_no_death = false;
 
 //need these function prototypes or else it gets mad about "ColorHolder"
-void printWord(String word, ColorHolder col, int start_x);
-void printWord(String word, ColorHolder col, int start_x, bool wrap);
-void printLetter(char thisChar, ColorHolder col, int start_x, bool wrap);
+void printWord(String word, ColorHolder * col, int start_x);
+void printWord(String word, ColorHolder * col, int start_x, bool wrap);
+void printLetter(char thisChar, ColorHolder * col, int start_x, bool wrap);
 

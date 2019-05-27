@@ -14,8 +14,9 @@ class ColorHolder
 
 		void set(int _r,int _g, int _b);
 		void set(int _r,int _g, int _b, float fade_prc);
-		void set(ColorHolder source);
-		void set(ColorHolder source, float fade_prc);
+		void set(ColorHolder * source);
+		void set(ColorHolder * source, float fade_prc);
+		void blank();
 
 		uint32_t get_uint();
 		uint32_t get_uint(float fade_prc);

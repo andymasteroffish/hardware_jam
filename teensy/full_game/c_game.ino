@@ -15,27 +15,33 @@ void setup() {
   resetMatrix();
 
   //setup players
+  //blue
   players[0].identifier = 0;
   players[0].col.set(0,0,136);
+  playerStarts[0] = 8;
 //  players[0].r = 0;
 //  players[0].g = 0;
 //  players[0].b = 136;
 
+  //yellow
   players[1].identifier = 10;
   players[1].col.set(136,136,0);
+  playerStarts[1] = 22;
 //  players[1].r = 136;
 //  players[1].g = 136;
 //  players[1].b = 0;
 
+  //orange
   players[2].identifier = 20;
   players[2].col.set(200,50,0);
+  playerStarts[2] = 31;
 //  players[2].r = 50;//80;//0;
 //  players[2].g = 200;//255;
 //  players[2].b = 0;//136;
 
-  playerStarts[0] = 8;
-  playerStarts[1] = 20;
-  playerStarts[2] = 31;
+  
+  
+  
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
@@ -238,7 +244,7 @@ void reset() {
 void startJoinScreen(){
   gameState = STATE_JOIN;
   join_sreen_start_time = millis();
-  join_screen_end_timer = 1500;
+  join_screen_end_timer = 100;//1500;
   for (int i=0; i<MAX_NUM_PLAYERS; i++){
     player_joined[i] = false;
   }
@@ -264,6 +270,8 @@ void loop() {
   if (use_debug_serial_display && num_queued_debug_display > 0) {
     sendDebugDisplayMessage();
   }
+
+  delay(10);
 
 }
 
@@ -505,21 +513,21 @@ void displayGame() {
       //starter trail
       if (players[i].speed > startSpeed * speedMult) {
         float power = 0.02f;
-        pixel[trail_x_1][players[i].y].set(players[i].col, power);
+        pixel[trail_x_1][players[i].y].set(&players[i].col, power);
         //players[i].identifier + 8;
       } else if (players[i].speed <= startSpeed * speedMult) {
         float power = 0.1f;
-        pixel[trail_x_1][players[i].y].set(players[i].col, power);
+        pixel[trail_x_1][players[i].y].set(&players[i].col, power);
         power = 0.02f;
-        pixel[trail_x_2][players[i].y].set(players[i].col, power);
+        pixel[trail_x_2][players[i].y].set(&players[i].col, power);
         //power = 0.03f;
         //pixel[trail_x_3][players[i].y].set(players[i].col, power);
       }
     } else {
       //Serial.println("dead trails");
-      pixel[trail_x_1][players[i].y].set(blank_col);
-      pixel[trail_x_2][players[i].y].set(blank_col);
-      pixel[trail_x_3][players[i].y].set(blank_col);
+      pixel[trail_x_1][players[i].y].blank();
+      pixel[trail_x_2][players[i].y].blank();
+      pixel[trail_x_3][players[i].y].blank();
     }
 
     //add the obstacles
@@ -531,11 +539,11 @@ void displayGame() {
       if (obstacles[i].action == 'a') color = &accelerator_col;//.r*global_brightness, accelerator_col.g*global_brightness,   accelerator_col.b*global_brightness);
       if (obstacles[i].action == 'r') color = &reverse_col;//.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
 
-      buttons[i].col.set(*color);
+      buttons[i].col.set(color);
       
       for (int r = 0; r < NUM_ROWS; r++) {
         if (obstacles[i].onRows[r]) {
-          pixel [obstacles[i].x][r].set(*color);
+          pixel[obstacles[i].x][r].set(color);
         }
       }
     }
@@ -550,10 +558,10 @@ void displayGame() {
         }
   
         if (!players[i].doingDeathAnim && players[i].speed != 0) {
-          pixel[players[i].x][players[i].y].set(players[i].col);// = pix0.Color( players[i].r,  players[i].g,  players[i].b);// players[i].identifier; //full power
+          pixel[players[i].x][players[i].y].set(&players[i].col);// = pix0.Color( players[i].r,  players[i].g,  players[i].b);// players[i].identifier; //full power
         }
         else {
-          pixel[players[i].x][players[i].y].set(blank_col);
+          pixel[players[i].x][players[i].y].blank();
         }
       }
     }
@@ -576,15 +584,15 @@ void displayGame() {
         if (players[i].deathAnimStep < 3) {
           //diagonal
           float power = 0.1 - (float)players[i].deathAnimStep * 0.02;
-          if (y_top >= 0)        pixel[x_left][y_top].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);// players[i].identifier + players[i].deathAnimStep; //add the step # so player death particles become 10% weaker each step
-          if (y_bot < NUM_ROWS)  pixel[x_left][y_bot].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-          if (y_top >= 0)        pixel[x_right][y_top].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-          if (y_bot < NUM_ROWS)  pixel[x_right][y_bot].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+          if (y_top >= 0)        pixel[x_left][y_top].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);// players[i].identifier + players[i].deathAnimStep; //add the step # so player death particles become 10% weaker each step
+          if (y_bot < NUM_ROWS)  pixel[x_left][y_bot].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+          if (y_top >= 0)        pixel[x_right][y_top].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+          if (y_bot < NUM_ROWS)  pixel[x_right][y_bot].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
 
           //horizontal
           if (y_mid >= 0 && y_mid < NUM_ROWS) {
-            pixel[x_left][players[i].y].set(players[i].col, power);// pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-            pixel[x_right][players[i].y].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+            pixel[x_left][players[i].y].set(&players[i].col, power);// pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+            pixel[x_right][players[i].y].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
           }
         }
 
@@ -622,14 +630,14 @@ void displayIntro() {
       if (this_char == '0') col = &players[0].col;
       if (this_char == '1') col = &players[1].col;
 
-      pixel[x][y].set(*col);
+      pixel[x][y].set(col);
     }
   }
 
   //show the title
   String title_text = "circumnavigators";
   int title_x = NUM_COLS - (millis() / 70) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
-  printWord(title_text, reverse_col, title_x);
+  printWord(title_text, &reverse_col, title_x);
   
 
   //messing with the buttons
@@ -681,11 +689,11 @@ void displayJoin(){
       prc = 1;
     }
 
-    buttons[i].col.set(players[i].col, prc);// = button_pixels.Color(r,g,b);
+    buttons[i].col.set(&players[i].col, prc);// = button_pixels.Color(r,g,b);
   }
   //blank other buttons
   for (int i=num_players; i<NUM_BUTTONS; i++){
-     buttons[i].col.set(blank_col);
+     buttons[i].col.blank();
   }
 
   //show who's there
@@ -695,8 +703,7 @@ void displayJoin(){
       int start_x = playerStarts[i] - 2;
       for (int x=start_x; x<start_x+col_w; x++){
         for (int y=0; y<NUM_ROWS; y++){
-          pixel[x][y].set(players[i].col);
-          //pixel[x][y] = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness); 
+          pixel[x][y].set(&players[i].col);
         }
       }
     }
@@ -796,6 +803,7 @@ void displayPregame() {
   //blank the board
   resetMatrix();
 
+
   //show the characters coming in with arrows
   int trackPos = (NUM_COLS / 2) - pregameStep;
   if (trackPos < 0)  trackPos = 0;
@@ -804,46 +812,37 @@ void displayPregame() {
       int x1 = (playerStarts[p] + i) % NUM_COLS;
       int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
 
-      //uint32_t player_col = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness);
-
       if (i != trackPos - 3) {
-        //pixel[x1][players[p].y].set(players[i].col);// = player_col;
-        //pixel[x2][players[p].y].set(players[i].col);//;
-      }
-
-      //tetsing
-      if (x1 % 10 == 0){
-        pixel[x1][players[p].y].set(players[i].col);
+        pixel[x1][players[p].y].set(&players[p].col);// = player_col;
+        pixel[x2][players[p].y].set(&players[p].col);//;
       }
 
       //arrow tail
-//      if (i == trackPos - 1) {
-//        int x1Shift = (x1 + 1) % NUM_COLS;
-//        int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
-//        pixel[x1][players[p].y - 1].set(players[i].col);
-//        pixel[x1Shift][players[p].y - 1].set(players[i].col);
-//        pixel[x1Shift][players[p].y + 1].set(players[i].col);
-//        pixel[x1][players[p].y + 1].set(players[i].col);
-//
-//        pixel[x2][players[p].y - 1].set(players[i].col);
-//        pixel[x2Shift][players[p].y - 1].set(players[i].col);;
-//        pixel[x2Shift][players[p].y + 1].set(players[i].col);;
-//        pixel[x2][players[p].y + 1].set(players[i].col);;
-//      }
+      if (i == trackPos - 1) {
+        int x1Shift = (x1 + 1) % NUM_COLS;
+        int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
+        pixel[x1][players[p].y - 1].set(&players[p].col);
+        pixel[x1Shift][players[p].y - 1].set(&players[p].col);
+        pixel[x1Shift][players[p].y + 1].set(&players[p].col);
+        pixel[x1][players[p].y + 1].set(&players[p].col);
+
+        pixel[x2][players[p].y - 1].set(&players[p].col);
+        pixel[x2Shift][players[p].y - 1].set(&players[p].col);
+        pixel[x2Shift][players[p].y + 1].set(&players[p].col);
+        pixel[x2][players[p].y + 1].set(&players[p].col);
+      }
     }
   }
-
 
   //blink the game
   if (pregameStep > NUM_COLS / 2) {
     if (pregameStep % 4 < 2) {
-      //Serial.println("display");
       displayGame();
     }
 
     //make sure the players are shown
     for (int i = 0; i < num_players; i++) {
-      pixel[players[i].x][players[i].y].set(players[i].col);
+      pixel[players[i].x][players[i].y].set(&players[i].col);
     }
   }
 
@@ -886,8 +885,8 @@ void displayWinner(int player) {
       for (int x = 0; x < NUM_COLS; x++) {
         int loc = x + y * NUM_COLS;
         //uint32_t player_col = pix0.Color(players[player].r*global_brightness, players[player].g*global_brightness, players[player].b*global_brightness);
-        pixel[x][y].set(players[player].col);// = player_col;
-        if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y].set(blank_col);
+        pixel[x][y].set(&players[player].col);// = player_col;
+        if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y].blank();
       }
     }
   }  
@@ -895,7 +894,7 @@ void displayWinner(int player) {
     String title_text = "winner winner";
     int title_x = NUM_COLS - (millis() / 100) %  NUM_COLS;
     //uint32_t player_col = pix0.Color(players[player].r*global_brightness, players[player].g*global_brightness, players[player].b*global_brightness);
-    printWord(title_text,  players[player].col, title_x, true);
+    printWord(title_text,  &players[player].col, title_x, true);
   }
 
   if (millis() > end_game_over_time) {
@@ -906,38 +905,43 @@ void displayWinner(int player) {
   //set the buttons
   for (int i=0; i<NUM_BUTTONS; i++){
     float prc = 0.5 + sin(millis()/100) * 0.5;
-    buttons[i].col.set(players[player].col, prc);
+    buttons[i].col.set(&players[player].col, prc);
   }
 
 }
 
 void displaySettings(){
-  /*
   resetMatrix();
+
+  for (int i=0; i<NUM_BUTTONS; i++){
+    buttons[i].col.blank();//set(&reverse_col);
+  }
+  
 
   //1 is brightness
   int brightness_bar_height = global_brightness_setting;
   for (int y = 0; y < NUM_ROWS; y++) {
     if (NUM_ROWS-y <= brightness_bar_height){
-      pixel[obstacles[1].x][y] = 's';
+      pixel[obstacles[1].x][y].set(100,100,100);
     }
   }
+  buttons[1].col.set(&shifter_col);
 
   //2 is num players
   String player_num_text = String(num_players);
-  printWord(player_num_text, 's', obstacles[2].x-2);
-
+  printWord(player_num_text, &shifter_col, obstacles[2].x-2);
+  buttons[2].col.set(&shifter_col);
 
   //3 is start speed
 
   //4 is exit (drawing a check mark)
   int check_x = obstacles[4].x;
-  pixel[check_x-2][2] = 'a';
-  pixel[check_x-1][3] = 'a';
-  pixel[check_x+0][2] = 'a';
-  pixel[check_x+1][1] = 'a';
-  pixel[check_x+2][0] = 'a'; 
-  */
+  pixel[check_x-2][2].set(&accelerator_col);// = 'a';
+  pixel[check_x-1][3].set(&accelerator_col);// = 'a';
+  pixel[check_x+0][2].set(&accelerator_col);// = 'a';
+  pixel[check_x+1][1].set(&accelerator_col);// = 'a';
+  pixel[check_x+2][0].set(&accelerator_col);// = 'a'; 
+  buttons[4].col.set(&accelerator_col);
 }
 
 void button_pressed_settings(int id) {
@@ -979,7 +983,7 @@ void button_pressed_settings(int id) {
 void resetMatrix() {
   for (int y = 0; y < NUM_ROWS; y++) {
     for (int x = 0; x < NUM_COLS; x++) {
-      pixel[x][y].set(blank_col);
+      pixel[x][y].blank();
     }
   }
 }

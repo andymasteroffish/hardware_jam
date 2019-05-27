@@ -30,11 +30,15 @@ void ColorHolder::set(int _r,int _g, int _b, float fade_prc){
 	b = new_b;
 }
 
-void ColorHolder::set(ColorHolder source){
-	set(source.r, source.g, source.b);
+void ColorHolder::set(ColorHolder * source){
+	set(source->r, source->g, source->b);
 }
-void ColorHolder::set(ColorHolder source, float fade_prc){
-	set(source.r, source.g, source.b, fade_prc);
+void ColorHolder::set(ColorHolder * source, float fade_prc){
+	set(source->r, source->g, source->b, fade_prc);
+}
+
+void ColorHolder::blank(){
+	set(0,0,0);
 }
 
 uint32_t ColorHolder::get_uint(){
