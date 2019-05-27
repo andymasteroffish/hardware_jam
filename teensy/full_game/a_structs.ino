@@ -20,6 +20,7 @@ struct Player {
   int r;
   int g;
   int b;
+  ColorHolder col;
   int pX[MAX_TRAILS];
 
   int dist_traveled;
@@ -37,15 +38,15 @@ struct Button {
   bool is_held;
   char key;
 
-  uint32_t col;
+  ColorHolder col;
   int led_id;
 };
 
 //color
-struct Color {
-  int r;
-  int g;
-  int b;
-};
+//struct Color {
+//  int r;
+//  int g;
+//  int b;
+//};
 
 

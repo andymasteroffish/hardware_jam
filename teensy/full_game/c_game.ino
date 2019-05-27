@@ -16,19 +16,22 @@ void setup() {
 
   //setup players
   players[0].identifier = 0;
-  players[0].r = 0;
-  players[0].g = 0;
-  players[0].b = 136;
+  players[0].col.set(0,0,136);
+//  players[0].r = 0;
+//  players[0].g = 0;
+//  players[0].b = 136;
 
   players[1].identifier = 10;
-  players[1].r = 136;
-  players[1].g = 136;
-  players[1].b = 0;
+  players[1].col.set(136,136,0);
+//  players[1].r = 136;
+//  players[1].g = 136;
+//  players[1].b = 0;
 
   players[2].identifier = 20;
-  players[2].r = 50;//80;//0;
-  players[2].g = 200;//255;
-  players[2].b = 0;//136;
+  players[2].col.set(200,50,0);
+//  players[2].r = 50;//80;//0;
+//  players[2].g = 200;//255;
+//  players[2].b = 0;//136;
 
   playerStarts[0] = 8;
   playerStarts[1] = 20;
@@ -98,7 +101,6 @@ void setup() {
     buttons[i].next_check_time = 0;
     buttons[i].is_held = false;
     buttons[i].led_id = (i+3) % NUM_BUTTONS;
-    buttons[i].col = 0;
     pinMode(buttons[i].pin, INPUT_PULLUP);
   }
 
@@ -125,23 +127,13 @@ void setup() {
   prev_frame_millis = millis();
 
   //some default colors
-  blank_col = 0x000000;
+  int col_val = 100;
+  blank_col.set(0,0,0);
+  blocker_col.set(col_val,0,0);
+  shifter_col.set(col_val,col_val,col_val);
+  accelerator_col.set(0,col_val,0);
+  reverse_col.set(col_val,0,col_val);
   
-  blocker_col.r = 100;
-  blocker_col.g = 0;
-  blocker_col.b = 0;
-
-  shifter_col.r = 100;
-  shifter_col.g = 100;
-  shifter_col.b = 100;
-
-  accelerator_col.r = 0;
-  accelerator_col.g = 100;
-  accelerator_col.b = 0;
-
-  reverse_col.r = 100;
-  reverse_col.g = 0;
-  reverse_col.b = 100;
   
   //go right to the game if we're tetsing
   if (debug_skip_intro) {
@@ -489,6 +481,7 @@ void shiftObstacle(int id) {
 }
 
 void displayGame() {
+  /*
   resetMatrix();
   //Serial.println("doing display");
   //do the player trails before the obstacles
@@ -512,25 +505,25 @@ void displayGame() {
       //starter trail
       if (players[i].speed > startSpeed * speedMult) {
         float power = 0.02f;
-        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+        //pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
         //players[i].identifier + 8;
       } else if (players[i].speed <= startSpeed * speedMult) {
         //mid trail
 //        pixel[trail_x_1][players[i].y] = players[i].identifier + 3;
 //        pixel[trail_x_1][players[i].y] = players[i].identifier + 5;
 //        pixel[trail_x_2][players[i].y] = players[i].identifier + 7;
-        float power = 0.1f;
-        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
-        power = 0.06f;
-        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
-        power = 0.03f;
-        pixel[trail_x_2][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+//        float power = 0.1f;
+//        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+//        power = 0.06f;
+//        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+//        power = 0.03f;
+//        pixel[trail_x_2][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
       }
     } else {
       //Serial.println("dead trails");
-      pixel[trail_x_1][players[i].y] = blank_col;
-      pixel[trail_x_2][players[i].y] = blank_col;
-      pixel[trail_x_3][players[i].y] = blank_col;
+      pixel[trail_x_1][players[i].y].set(blank_col);
+      pixel[trail_x_2][players[i].y].set(blank_col);
+      pixel[trail_x_3][players[i].y].set(blank_col);
     }
 
     //add the obstacles
@@ -538,12 +531,12 @@ void displayGame() {
       for (int r = 0; r < NUM_ROWS; r++) {
         if (obstacles[i].onRows[r]) {
           //pixel [obstacles[i].x][r] = obstacles[i].action;
-          uint32_t color = blank_col;
-          if (obstacles[i].action == 'b') color = pix0.Color(blocker_col.r*global_brightness,   blocker_col.g*global_brightness, blocker_col.b*global_brightness);
-          if (obstacles[i].action == 's') color = pix0.Color(shifter_col.r*global_brightness, shifter_col.g*global_brightness, shifter_col.b*global_brightness);
-          if (obstacles[i].action == 'a') color = pix0.Color(accelerator_col.r*global_brightness, accelerator_col.g*global_brightness,   accelerator_col.b*global_brightness);
-          if (obstacles[i].action == 'r') color = pix0.Color(reverse_col.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
-          pixel [obstacles[i].x][r] = color;
+//          uint32_t color = blank_col;
+//          if (obstacles[i].action == 'b') color = pix0.Color(blocker_col.r*global_brightness,   blocker_col.g*global_brightness, blocker_col.b*global_brightness);
+//          if (obstacles[i].action == 's') color = pix0.Color(shifter_col.r*global_brightness, shifter_col.g*global_brightness, shifter_col.b*global_brightness);
+//          if (obstacles[i].action == 'a') color = pix0.Color(accelerator_col.r*global_brightness, accelerator_col.g*global_brightness,   accelerator_col.b*global_brightness);
+//          if (obstacles[i].action == 'r') color = pix0.Color(reverse_col.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
+//          pixel [obstacles[i].x][r] = color;
         }
       }
     }
@@ -572,8 +565,6 @@ void displayGame() {
           players[i].x = playerStarts[i];
         }
   
-        //      Serial.println("this player x");
-        //      Serial.println(players[i].x);
         if (!players[i].doingDeathAnim && players[i].speed != 0) {
           pixel[players[i].x][players[i].y] = pix0.Color( players[i].r,  players[i].g,  players[i].b);// players[i].identifier; //full power
         }
@@ -624,33 +615,35 @@ void displayGame() {
       }
     }
   }
+  */
 }
 
 void displayIntro() {
   int mod = (millis() / 400) % NUM_COLS;
   String abc = "-bsar01";
-  //println("mod=" + mod);
+  Serial.println("mod=" + mod);
 
   //flashing
   for (int y = 0; y < NUM_ROWS; y++) {
     for (int x = 0; x < NUM_COLS; x++) {
       int loc = x + mod + y * NUM_COLS;
-      //pixel[x][y] = abc.charAt(loc % abc.length());
-      //PLACEHOLDER TESTING
-      if (loc % 2 == 0){
-        pixel[x][y] = pix0.Color(reverse_col.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
-      }else{
-        pixel[x][y] = blank_col;
-      }
-      
+      char this_char = abc.charAt(loc % abc.length());
+      ColorHolder * col = &blank_col;
+      if (this_char == 'b') col = &blocker_col;
+      if (this_char == 's') col = &shifter_col;
+      if (this_char == 'a') col = &accelerator_col;
+      if (this_char == 'r') col = &reverse_col;
+      if (this_char == '0') col = &players[0].col;
+      if (this_char == '1') col = &players[1].col;
+
+      pixel[x][y].set(*col);
     }
   }
 
   //show the title
   String title_text = "circumnavigators";
   int title_x = NUM_COLS - (millis() / 70) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
-  uint32_t text_col = pix0.Color(reverse_col.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
-  printWord(title_text, text_col, title_x);
+  printWord(title_text, reverse_col, title_x);
   
 
   //messing with the buttons
@@ -680,30 +673,25 @@ void displayIntro() {
     float this_time = abs(anim_time-( (NUM_BUTTONS-1-i)+1));
     if (this_time < anim_range){
       prc = 1.0 - this_time / (float)anim_range;
-      
-      //prc = 1;
     }
 
-    if (i==1){
-      Serial.println(this_time);
-    }
-    
-    buttons[i].col = button_pixels.Color(r*prc,g*prc,b*prc); 
+    buttons[i].col.set(reverse_col.r, reverse_col.g, reverse_col.b, prc); 
     
   }
 }
 
 void displayJoin(){
+  
   resetMatrix();
   
   float time_on_screen = (millis()-join_sreen_start_time)/1000.0;
 
   //pulse the buttons
   for (int i=0; i<num_players; i++){
-    //good ol' grb color in the players
-    float r = (int)players[i].g;
-    float g = (int)players[i].r;
-    float b = (int)players[i].b;
+//    //good ol' grb color in the players
+//    float r = (int)players[i].g;
+//    float g = (int)players[i].r;
+//    float b = (int)players[i].b;
 
     float prc = 0.5 +sin(time_on_screen*10) * 0.5;
 
@@ -711,16 +699,16 @@ void displayJoin(){
       prc = 1;
     }
 
-    //fade between colors
-    r = (1.0-prc) * 0 + prc * r;
-    g = (1.0-prc) * 0 + prc * g;
-    b = (1.0-prc) * 0 + prc * b;
+//    //fade between colors
+//    r = (1.0-prc) * 0 + prc * r;
+//    g = (1.0-prc) * 0 + prc * g;
+//    b = (1.0-prc) * 0 + prc * b;
     
-    buttons[i].col = button_pixels.Color(r,g,b);
+    buttons[i].col.set(players[i].col, prc);// = button_pixels.Color(r,g,b);
   }
   //blank other buttons
   for (int i=num_players; i<NUM_BUTTONS; i++){
-     buttons[i].col = 0;
+     buttons[i].col.set(blank_col);
   }
 
   //show who's there
@@ -730,7 +718,8 @@ void displayJoin(){
       int start_x = playerStarts[i] - 2;
       for (int x=start_x; x<start_x+col_w; x++){
         for (int y=0; y<NUM_ROWS; y++){
-          pixel[x][y] = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness); 
+          pixel[x][y].set(players[i].col);
+          //pixel[x][y] = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness); 
         }
       }
     }
@@ -763,7 +752,11 @@ void displayJoin(){
     
     int left_x = opposite_x + frame;
     int right_x = opposite_x - frame;
-    
+
+    int arrow_r = 0;
+    int arrow_g = 255;
+    int arrow_b = 0;
+    float arrow_alpha = 0.02f;
     for (int x=left_x; x<left_x+arrow_length; x++){
        for (int y=0; y<NUM_ROWS; y++){
         bool fill_in = false;
@@ -780,7 +773,7 @@ void displayJoin(){
           fill_in = false;
         }
         if (fill_in){
-          pixel[x%NUM_COLS][y] = 'a';
+          pixel[x%NUM_COLS][y].set(arrow_r, arrow_g, arrow_b, arrow_alpha);
         }
        }
     }
@@ -800,14 +793,16 @@ void displayJoin(){
           fill_in = false;
         }
         if (fill_in){
-          pixel[x%NUM_COLS][y] = 'a';
+          pixel[x%NUM_COLS][y].set(arrow_r, arrow_g, arrow_b, arrow_alpha);
         }
        }
     }
   }
+  
 }
 
 void displayPregame() {
+  /*
   //time to advance
   if (millis() > nextPregameStepTime) {
     nextPregameStepTime = millis() + 60;
@@ -876,11 +871,7 @@ void displayPregame() {
     Serial.println("go to game");
     gameState = STATE_GAME;
   }
-
-  //set the buttons
-//  for (int i=0; i<NUM_BUTTONS; i++){
-//    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
-//  }
+*/
 }
 
 //get to settings by holding several buttons down at once during the intro
@@ -904,6 +895,7 @@ bool check_holding_for_settings() {
 }
 
 void displayWinner(int player) {
+  /*
   int mod = (millis() / 50) % NUM_COLS;
   //println("PLAYER " + player + " WON!!!" + " mod=" + mod);
 
@@ -935,9 +927,11 @@ void displayWinner(int player) {
 //  for (int i=0; i<NUM_BUTTONS; i++){
 //    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
 //  }
+*/
 }
 
 void displaySettings(){
+  /*
   resetMatrix();
 
   //1 is brightness
@@ -962,7 +956,7 @@ void displaySettings(){
   pixel[check_x+0][2] = 'a';
   pixel[check_x+1][1] = 'a';
   pixel[check_x+2][0] = 'a'; 
-
+  */
 }
 
 void button_pressed_settings(int id) {
@@ -1004,7 +998,7 @@ void button_pressed_settings(int id) {
 void resetMatrix() {
   for (int y = 0; y < NUM_ROWS; y++) {
     for (int x = 0; x < NUM_COLS; x++) {
-      pixel[x][y] = blank_col;
+      pixel[x][y].set(blank_col);
     }
   }
 }
@@ -1016,12 +1010,14 @@ void setLEDs() {
     for (int x = 0; x < NUM_COLS; x++) {
 
       //chekc if this pixel has changed
-      if (pixel[x][y] != last_sent_grid[x][y]) {
-        if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
-        if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x - 1, pixel[x][y]);
-        if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
-        if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
-        if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
+      if (pixel[x][y].has_been_changed){// != last_sent_grid[x][y]) {
+        pixel[x][y].has_been_changed = false;
+        //if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
+        if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
+        if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x - 1, pixel[x][y].get_uint_dotstar(global_brightness));
+        if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
+        if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
+        if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
 
         anythingChanged = true;
       }
@@ -1037,21 +1033,22 @@ void setLEDs() {
     pix4.show();
 
     //  //store the current grid for comparison
-    for (int y = 0; y < NUM_ROWS; y++) {
-      for (int x = 0; x < NUM_COLS; x++) {
-        last_sent_grid[x][y] = pixel[x][y];
-      }
-    }
+//    for (int y = 0; y < NUM_ROWS; y++) {
+//      for (int x = 0; x < NUM_COLS; x++) {
+//        last_sent_grid[x][y] = pixel[x][y];
+//      }
+//    }
   }
 
   //update the button colors
   for (int i=0; i<NUM_BUTTONS; i++){
-    button_pixels.setPixelColor( buttons[i].led_id, buttons[i].col);
+    //button_pixels.setPixelColor( buttons[i].led_id, buttons[i].col);
+    button_pixels.setPixelColor( buttons[i].led_id, buttons[i].col.get_uint());
   }
   button_pixels.show();
 }
 
-
+/*
 void debugDisplay(int x, int y, char col) {
   String line = String(x) + "," + String(y) + "," + pixel[x][y] + "\n";
   debug_display_buffer += line;
@@ -1063,6 +1060,7 @@ void debugDisplay(int x, int y, char col) {
 
   //Serial.print(line);
 }
+*/
 
 void sendDebugDisplayMessage() {
   //send it

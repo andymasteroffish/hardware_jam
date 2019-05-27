@@ -35,8 +35,10 @@ int game_over_time = 0;
 int deathAnimStepTime = 150;
 
 //maintaining pixels
-uint32_t pixel[NUM_COLS][NUM_ROWS];
-uint32_t last_sent_grid[NUM_COLS][NUM_ROWS];
+ColorHolder pixel[NUM_COLS][NUM_ROWS];
+//uint32_t last_sent_grid[NUM_COLS][NUM_ROWS];
+
+ColorHolder testo;
 
 //pregame intro
 int pregameStep = 0;
@@ -86,8 +88,8 @@ int updatedCols[10];
 int numUpdatedCols = 0;
 
 //game colors
-uint32_t blank_col;
-Color blocker_col;
-Color shifter_col;
-Color accelerator_col;
-Color reverse_col;
+ColorHolder blank_col;
+ColorHolder blocker_col;
+ColorHolder shifter_col;
+ColorHolder accelerator_col;
+ColorHolder reverse_col;

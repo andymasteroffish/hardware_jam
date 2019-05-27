@@ -232,17 +232,17 @@ boolean letter_here[NUM_ROWS][LETTER_WIDTH] = {   {true, false, false, false, fa
 };
 
 
-void printWord(String word, uint32_t col, int start_x){
+void printWord(String word, ColorHolder col, int start_x){
   printWord(word, col, start_x, false);
 }
-void printWord(String word, uint32_t col, int start_x, bool wrap) {
+void printWord(String word, ColorHolder col, int start_x, bool wrap) {
   int cur_x = start_x;
   for (int i = 0; i < word.length(); i++) {
     printLetter(word.charAt(i), col, cur_x, wrap);
     cur_x += LETTER_WIDTH + 1;
   }
 }
-void printLetter(char thisChar, uint32_t col, int start_x, bool wrap) {
+void printLetter(char thisChar, ColorHolder col, int start_x, bool wrap) {
   boolean letter_grid[NUM_ROWS][LETTER_WIDTH];
   switch (thisChar) {
     case '1':
@@ -358,14 +358,14 @@ void printLetter(char thisChar, uint32_t col, int start_x, bool wrap) {
       //the far right column is blank
       if (x >= 0 && x < NUM_COLS) {
         if (i == -1 || i == LETTER_WIDTH) {
-          pixel[x][y] = blank_col;
+          pixel[x][y].set(blank_col);
         }
         //everything else is the letter
         else if (letter_grid[y][i]) {
-          pixel[x][y] = col;
+          pixel[x][y].set(col); 
         }
         else {
-          pixel[x][y] = blank_col;
+          pixel[x][y].set(blank_col);
         }
       }
     }

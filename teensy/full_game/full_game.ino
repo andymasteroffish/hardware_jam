@@ -2,6 +2,8 @@
 #include <Adafruit_NeoPixel.h>  //lol yes we're using dot star and neopixel the absolute madman
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 
+#include "src/ColorHolder/ColorHolder.h" 
+
 //global defines
 
 #define NUM_COLS 96
@@ -24,4 +26,8 @@
 
 #define NEO_PIXEL_PIN   8
 
+//need these function prototypes or else it gets mad about "ColorHolder"
+void printWord(String word, ColorHolder col, int start_x);
+void printWord(String word, ColorHolder col, int start_x, bool wrap);
+void printLetter(char thisChar, ColorHolder col, int start_x, bool wrap);
 
