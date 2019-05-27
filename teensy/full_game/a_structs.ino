@@ -17,9 +17,6 @@ struct Player {
   int nextMoveTime;   //when the next move will occur
   int dir;            //1 is normal, -1 is reverse
   char identifier;
-//  int r;
-//  int g;
-//  int b;
   ColorHolder col;
   int pX[MAX_TRAILS];
 

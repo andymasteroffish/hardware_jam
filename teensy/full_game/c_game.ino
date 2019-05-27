@@ -19,28 +19,19 @@ void setup() {
   players[0].identifier = 0;
   players[0].col.set(0,0,136);
   playerStarts[0] = 8;
-//  players[0].r = 0;
-//  players[0].g = 0;
-//  players[0].b = 136;
+  join_areas[0].setup(8, &players[0].col);
 
   //yellow
   players[1].identifier = 10;
   players[1].col.set(136,136,0);
   playerStarts[1] = 22;
-//  players[1].r = 136;
-//  players[1].g = 136;
-//  players[1].b = 0;
+  join_areas[1].setup(22, &players[1].col);
 
   //orange
   players[2].identifier = 20;
   players[2].col.set(200,50,0);
   playerStarts[2] = 31;
-//  players[2].r = 50;//80;//0;
-//  players[2].g = 200;//255;
-//  players[2].b = 0;//136;
-
-  
-  
+  join_areas[2].setup(31, &players[2].col);
   
 
   //setup obstacles
@@ -111,20 +102,24 @@ void setup() {
   }
 
   //LEDs
-  pix0.begin();
-  pix0.show();
-
-  pix1.begin();
-  pix1.show();
-
-  pix2.begin();
-  pix2.show();
-
-  pix3.begin();
-  pix3.show();
-
-  pix4.begin();
-  pix4.show();
+  for (int i=0; i<NUM_ROWS; i++){
+    leds[i].begin();
+    leds[i].show();
+  }
+//  pix0.begin();
+//  pix0.show();
+//
+//  pix1.begin();
+//  pix1.show();
+//
+//  pix2.begin();
+//  pix2.show();
+//
+//  pix3.begin();
+//  pix3.show();
+//
+//  pix4.begin();
+//  pix4.show();
 
   //buttons
   button_pixels.begin();
@@ -211,6 +206,11 @@ void reset() {
     players[2].y = 3;
   }
 
+  //have the join areas do their thing
+  for (int i=0; i<num_players; i++){
+    join_areas[i].mark_game_start(players[i].y);
+  }
+
   for (int i = 0; i < MAX_NUM_PLAYERS; i++) {
     players[i].x = playerStarts[i];
     for (int j = 0; j < MAX_TRAILS; j++) players[i].pX[j] = players[i].x;
@@ -246,7 +246,7 @@ void startJoinScreen(){
   join_sreen_start_time = millis();
   join_screen_end_timer = 100;//1500;
   for (int i=0; i<MAX_NUM_PLAYERS; i++){
-    player_joined[i] = false;
+    join_areas[i].reset();
   }
   resetMatrix();
 }
@@ -469,7 +469,7 @@ void button_pressed(int id) {
     startJoinScreen();
   }else if (gameState == STATE_JOIN){
     if (id < num_players){
-      player_joined[id] = true;
+      join_areas[id].mark_ready();
     }
   }else if (gameState == STATE_GAMEOVER) {
     gameState = STATE_INTRO;
@@ -685,7 +685,7 @@ void displayJoin(){
     
     float prc = 0.5 +sin(time_on_screen*10) * 0.5;
 
-    if (player_joined[i]){
+    if (join_areas[i].player_joined){
       prc = 1;
     }
 
@@ -696,23 +696,17 @@ void displayJoin(){
      buttons[i].col.blank();
   }
 
+  
   //show who's there
   int col_w = 5;
   for (int i=0; i<num_players; i++){
-    if (player_joined[i]){
-      int start_x = playerStarts[i] - 2;
-      for (int x=start_x; x<start_x+col_w; x++){
-        for (int y=0; y<NUM_ROWS; y++){
-          pixel[x][y].set(&players[i].col);
-        }
-      }
-    }
+    join_areas[i].update(delta_millis, pixel);
   }
 
   //time to move on?
   int num_in = 0;
   for (int i=0; i<num_players; i++){
-    if (player_joined[i]){
+    if (join_areas[i].player_joined){
       num_in++;
     }
   }
@@ -803,6 +797,11 @@ void displayPregame() {
   //blank the board
   resetMatrix();
 
+  
+  //show the join areas
+  for (int i=0; i<num_players; i++){
+    join_areas[i].update(delta_millis, pixel);
+  }
 
   //show the characters coming in with arrows
   int trackPos = (NUM_COLS / 2) - pregameStep;
@@ -833,6 +832,7 @@ void displayPregame() {
       }
     }
   }
+
 
   //blink the game
   if (pregameStep > NUM_COLS / 2) {
@@ -997,12 +997,15 @@ void setLEDs() {
       //chekc if this pixel has changed
       if (pixel[x][y].has_been_changed){// != last_sent_grid[x][y]) {
         pixel[x][y].has_been_changed = false;
-        //if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , pixel[x][y]);
-        if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
-        if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x - 1, pixel[x][y].get_uint_dotstar(global_brightness));
-        if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
-        if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
-        if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
+        int this_x = NUM_COLS - 1 - x;
+        if (y==1) this_x = NUM_COLS - 1 - x - 1;  //need to shift this one over by 1
+        leds[y].setPixelColor(this_x, pixel[x][y].get_uint_dotstar(global_brightness));
+
+//        if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
+//        if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x - 1, pixel[x][y].get_uint_dotstar(global_brightness));
+//        if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
+//        if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
+//        if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
 
         anythingChanged = true;
       }
@@ -1011,11 +1014,14 @@ void setLEDs() {
 
   //if any pixels were changed, updated all of the LEDs and store the current grid for comparison next frame
   if (anythingChanged) {
-    pix0.show();
-    pix1.show();
-    pix2.show();
-    pix3.show();
-    pix4.show();
+    for (int y = 0; y < NUM_ROWS; y++) {
+      leds[y].show();
+    }
+//    pix0.show();
+//    pix1.show();
+//    pix2.show();
+//    pix3.show();
+//    pix4.show();
 
     //  //store the current grid for comparison
 //    for (int y = 0; y < NUM_ROWS; y++) {

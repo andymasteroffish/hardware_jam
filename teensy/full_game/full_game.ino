@@ -1,11 +1,14 @@
-#include <Adafruit_DotStar.h>
+
+
+//#include <Adafruit_DotStar.h>
 #include <Adafruit_NeoPixel.h>  //lol yes we're using dot star and neopixel the absolute madman
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 
+#include "src/Adafruit_DotStar/Adafruit_DotStar.h" 
 #include "src/ColorHolder/ColorHolder.h" 
+#include "src/JoinArea/JoinArea.h" 
 
 //global defines
-
 #define NUM_COLS 96
 #define NUM_ROWS 5
 

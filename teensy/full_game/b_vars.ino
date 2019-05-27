@@ -56,8 +56,9 @@ int button_lock_time = 1000;
 //join screen
 int join_sreen_start_time;
 int join_screen_time_limit = 5000;
-bool player_joined[MAX_NUM_PLAYERS];
 int join_screen_end_timer;
+//bool player_joined[MAX_NUM_PLAYERS];
+JoinArea join_areas[MAX_NUM_PLAYERS];
 
 //going to settings mode
 int settings_timer = 0;
@@ -74,11 +75,20 @@ Adafruit_NeoPixel button_pixels = Adafruit_NeoPixel(NUM_BUTTONS, NEO_PIXEL_PIN, 
 //this is ugly, but putting them in an array from the start keeps failing
 //data pin then clock pin
 //data is green, clock is yellow
-Adafruit_DotStar pix0 = Adafruit_DotStar(NUM_COLS, 4, 5 , DOTSTAR_BRG);
-Adafruit_DotStar pix1 = Adafruit_DotStar(NUM_COLS, 6, 7, DOTSTAR_BRG);
-Adafruit_DotStar pix2 = Adafruit_DotStar(NUM_COLS + 1, 11, 12, DOTSTAR_BRG);
-Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS + 1, 13, 14, DOTSTAR_BRG);  //right now this strip is messed up and we skip the first LED
-Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS + 1 , 15, 16, DOTSTAR_BRG); //there was an extra LED on this one
+//Adafruit_DotStar pix0 = Adafruit_DotStar(NUM_COLS, 4, 5 , DOTSTAR_BRG);
+//Adafruit_DotStar pix1 = Adafruit_DotStar(NUM_COLS, 6, 7, DOTSTAR_BRG);
+//Adafruit_DotStar pix2 = Adafruit_DotStar(NUM_COLS + 1, 11, 12, DOTSTAR_BRG);
+//Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS + 1, 13, 14, DOTSTAR_BRG);  //right now this strip is messed up and we skip the first LED
+//Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS + 1 , 15, 16, DOTSTAR_BRG); //there was an extra LED on this one
+
+
+Adafruit_DotStar leds[] = {
+  Adafruit_DotStar(NUM_COLS, 4, 5 , DOTSTAR_BRG),
+  Adafruit_DotStar(NUM_COLS, 6, 7, DOTSTAR_BRG),
+  Adafruit_DotStar(NUM_COLS + 1, 11, 12, DOTSTAR_BRG),
+  Adafruit_DotStar(NUM_COLS + 1, 13, 14, DOTSTAR_BRG),  //right now this strip is messed up and we skip the first LED
+  Adafruit_DotStar(NUM_COLS + 1 , 15, 16, DOTSTAR_BRG) //there was an extra LED on this one
+};
 
 //trakcing which columns have changed this frame
 int updatedCols[10];
