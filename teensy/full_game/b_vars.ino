@@ -1,8 +1,5 @@
 
 
-boolean use_debug_serial_display = false;
-boolean debug_skip_intro = false;
-boolean debug_no_death = false;
 
 //game values
 int startSpeed = 230;  //measured in millis between steps

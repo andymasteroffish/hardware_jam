@@ -481,7 +481,7 @@ void shiftObstacle(int id) {
 }
 
 void displayGame() {
-  /*
+  
   resetMatrix();
   //Serial.println("doing display");
   //do the player trails before the obstacles
@@ -505,19 +505,15 @@ void displayGame() {
       //starter trail
       if (players[i].speed > startSpeed * speedMult) {
         float power = 0.02f;
-        //pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+        pixel[trail_x_1][players[i].y].set(players[i].col, power);
         //players[i].identifier + 8;
       } else if (players[i].speed <= startSpeed * speedMult) {
-        //mid trail
-//        pixel[trail_x_1][players[i].y] = players[i].identifier + 3;
-//        pixel[trail_x_1][players[i].y] = players[i].identifier + 5;
-//        pixel[trail_x_2][players[i].y] = players[i].identifier + 7;
-//        float power = 0.1f;
-//        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
-//        power = 0.06f;
-//        pixel[trail_x_1][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
-//        power = 0.03f;
-//        pixel[trail_x_2][players[i].y] = pix0.Color(players[i].r*power, players[i].g*power, players[i].b*power);
+        float power = 0.1f;
+        pixel[trail_x_1][players[i].y].set(players[i].col, power);
+        power = 0.02f;
+        pixel[trail_x_2][players[i].y].set(players[i].col, power);
+        //power = 0.03f;
+        //pixel[trail_x_3][players[i].y].set(players[i].col, power);
       }
     } else {
       //Serial.println("dead trails");
@@ -528,32 +524,20 @@ void displayGame() {
 
     //add the obstacles
     for (int i = 0; i < NUM_OBSTACLES; i++) {
+      //get the color
+      ColorHolder * color = &blank_col;
+      if (obstacles[i].action == 'b') color = &blocker_col;//.r*global_brightness,   blocker_col.g*global_brightness, blocker_col.b*global_brightness);
+      if (obstacles[i].action == 's') color = &shifter_col;//.r*global_brightness, shifter_col.g*global_brightness, shifter_col.b*global_brightness);
+      if (obstacles[i].action == 'a') color = &accelerator_col;//.r*global_brightness, accelerator_col.g*global_brightness,   accelerator_col.b*global_brightness);
+      if (obstacles[i].action == 'r') color = &reverse_col;//.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
+
+      buttons[i].col.set(*color);
+      
       for (int r = 0; r < NUM_ROWS; r++) {
         if (obstacles[i].onRows[r]) {
-          //pixel [obstacles[i].x][r] = obstacles[i].action;
-//          uint32_t color = blank_col;
-//          if (obstacles[i].action == 'b') color = pix0.Color(blocker_col.r*global_brightness,   blocker_col.g*global_brightness, blocker_col.b*global_brightness);
-//          if (obstacles[i].action == 's') color = pix0.Color(shifter_col.r*global_brightness, shifter_col.g*global_brightness, shifter_col.b*global_brightness);
-//          if (obstacles[i].action == 'a') color = pix0.Color(accelerator_col.r*global_brightness, accelerator_col.g*global_brightness,   accelerator_col.b*global_brightness);
-//          if (obstacles[i].action == 'r') color = pix0.Color(reverse_col.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
-//          pixel [obstacles[i].x][r] = color;
+          pixel [obstacles[i].x][r].set(*color);
         }
       }
-    }
-
-    //set the button colors
-    //I ripped this from setLEDs() but the R and G values were flipped
-    for (int i = 0; i < NUM_OBSTACLES; i++) {
-        uint32_t color;
-        int bright = 255;
-        int soft = 0;
-        if (obstacles[i].action == 'b') color = button_pixels.Color(bright*global_brightness,   soft*global_brightness, soft*global_brightness);
-        if (obstacles[i].action == 's') color = button_pixels.Color(bright*global_brightness, bright*global_brightness, bright*global_brightness);
-        if (obstacles[i].action == 'a') color = button_pixels.Color(0*global_brightness, bright*global_brightness,   soft*global_brightness);
-        if (obstacles[i].action == 'r') color = button_pixels.Color(bright*global_brightness,   soft*global_brightness, bright*global_brightness);
-        //int button_id = (i+3)%NUM_OBSTACLES;
-        buttons[i].col = color;
-        //button_pixels.setPixelColor( buttons[i].led_id, color); 
     }
 
     //add the players over them
@@ -566,15 +550,16 @@ void displayGame() {
         }
   
         if (!players[i].doingDeathAnim && players[i].speed != 0) {
-          pixel[players[i].x][players[i].y] = pix0.Color( players[i].r,  players[i].g,  players[i].b);// players[i].identifier; //full power
+          pixel[players[i].x][players[i].y].set(players[i].col);// = pix0.Color( players[i].r,  players[i].g,  players[i].b);// players[i].identifier; //full power
         }
         else {
-          pixel[players[i].x][players[i].y] = 0x000000;
+          pixel[players[i].x][players[i].y].set(blank_col);
         }
       }
     }
 
     //death animations
+    
     for (int i = 0; i < num_players; i++) {
       if (players[i].doingDeathAnim == true) {
         //how far to go
@@ -590,16 +575,16 @@ void displayGame() {
         //add them to the pixels (last few frames are blank)
         if (players[i].deathAnimStep < 3) {
           //diagonal
-          float power = 0.5 - (float)players[i].deathAnimStep * 0.1;
-          if (y_top >= 0)        pixel[x_left][y_top] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);// players[i].identifier + players[i].deathAnimStep; //add the step # so player death particles become 10% weaker each step
-          if (y_bot < NUM_ROWS)  pixel[x_left][y_bot] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-          if (y_top >= 0)        pixel[x_right][y_top] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-          if (y_bot < NUM_ROWS)  pixel[x_right][y_bot] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+          float power = 0.1 - (float)players[i].deathAnimStep * 0.02;
+          if (y_top >= 0)        pixel[x_left][y_top].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);// players[i].identifier + players[i].deathAnimStep; //add the step # so player death particles become 10% weaker each step
+          if (y_bot < NUM_ROWS)  pixel[x_left][y_bot].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+          if (y_top >= 0)        pixel[x_right][y_top].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+          if (y_bot < NUM_ROWS)  pixel[x_right][y_bot].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
 
           //horizontal
           if (y_mid >= 0 && y_mid < NUM_ROWS) {
-            pixel[x_left][players[i].y] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-            pixel[x_right][players[i].y] = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+            pixel[x_left][players[i].y].set(players[i].col, power);// pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+            pixel[x_right][players[i].y].set(players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
           }
         }
 
@@ -614,14 +599,15 @@ void displayGame() {
         }
       }
     }
+    
   }
-  */
+  
 }
 
 void displayIntro() {
   int mod = (millis() / 400) % NUM_COLS;
   String abc = "-bsar01";
-  Serial.println("mod=" + mod);
+  //Serial.println("mod=" + mod);
 
   //flashing
   for (int y = 0; y < NUM_ROWS; y++) {
@@ -688,22 +674,13 @@ void displayJoin(){
 
   //pulse the buttons
   for (int i=0; i<num_players; i++){
-//    //good ol' grb color in the players
-//    float r = (int)players[i].g;
-//    float g = (int)players[i].r;
-//    float b = (int)players[i].b;
-
+    
     float prc = 0.5 +sin(time_on_screen*10) * 0.5;
 
     if (player_joined[i]){
       prc = 1;
     }
 
-//    //fade between colors
-//    r = (1.0-prc) * 0 + prc * r;
-//    g = (1.0-prc) * 0 + prc * g;
-//    b = (1.0-prc) * 0 + prc * b;
-    
     buttons[i].col.set(players[i].col, prc);// = button_pixels.Color(r,g,b);
   }
   //blank other buttons
@@ -748,7 +725,7 @@ void displayJoin(){
     int arrow_track_length = 29;
     int arrow_length = 6;
     int frame = (millis()/100) % (arrow_track_length+arrow_length+arrow_length) -arrow_length;
-    Serial.println(frame);
+    //Serial.println(frame);
     
     int left_x = opposite_x + frame;
     int right_x = opposite_x - frame;
@@ -802,7 +779,7 @@ void displayJoin(){
 }
 
 void displayPregame() {
-  /*
+  
   //time to advance
   if (millis() > nextPregameStepTime) {
     nextPregameStepTime = millis() + 60;
@@ -827,32 +804,37 @@ void displayPregame() {
       int x1 = (playerStarts[p] + i) % NUM_COLS;
       int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
 
-      uint32_t player_col = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness);
+      //uint32_t player_col = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness);
 
       if (i != trackPos - 3) {
-        pixel[x1][players[p].y] = player_col;
-        pixel[x2][players[p].y] = player_col;
+        //pixel[x1][players[p].y].set(players[i].col);// = player_col;
+        //pixel[x2][players[p].y].set(players[i].col);//;
+      }
+
+      //tetsing
+      if (x1 % 10 == 0){
+        pixel[x1][players[p].y].set(players[i].col);
       }
 
       //arrow tail
-      if (i == trackPos - 1) {
-        int x1Shift = (x1 + 1) % NUM_COLS;
-        int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
-        pixel[x1][players[p].y - 1] = player_col;
-        pixel[x1Shift][players[p].y - 1] = player_col;
-        pixel[x1Shift][players[p].y + 1] = player_col;
-        pixel[x1][players[p].y + 1] = player_col;
-
-        pixel[x2][players[p].y - 1] = player_col;
-        pixel[x2Shift][players[p].y - 1] = player_col;
-        pixel[x2Shift][players[p].y + 1] = player_col;
-        pixel[x2][players[p].y + 1] = player_col;
-      }
+//      if (i == trackPos - 1) {
+//        int x1Shift = (x1 + 1) % NUM_COLS;
+//        int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
+//        pixel[x1][players[p].y - 1].set(players[i].col);
+//        pixel[x1Shift][players[p].y - 1].set(players[i].col);
+//        pixel[x1Shift][players[p].y + 1].set(players[i].col);
+//        pixel[x1][players[p].y + 1].set(players[i].col);
+//
+//        pixel[x2][players[p].y - 1].set(players[i].col);
+//        pixel[x2Shift][players[p].y - 1].set(players[i].col);;
+//        pixel[x2Shift][players[p].y + 1].set(players[i].col);;
+//        pixel[x2][players[p].y + 1].set(players[i].col);;
+//      }
     }
   }
 
+
   //blink the game
-  //Serial.println("blink");
   if (pregameStep > NUM_COLS / 2) {
     if (pregameStep % 4 < 2) {
       //Serial.println("display");
@@ -861,8 +843,7 @@ void displayPregame() {
 
     //make sure the players are shown
     for (int i = 0; i < num_players; i++) {
-      uint32_t player_col = pix0.Color(players[i].r*global_brightness, players[i].g*global_brightness, players[i].b*global_brightness);
-      pixel[players[i].x][players[i].y] = player_col;
+      pixel[players[i].x][players[i].y].set(players[i].col);
     }
   }
 
@@ -871,7 +852,7 @@ void displayPregame() {
     Serial.println("go to game");
     gameState = STATE_GAME;
   }
-*/
+
 }
 
 //get to settings by holding several buttons down at once during the intro
@@ -895,7 +876,7 @@ bool check_holding_for_settings() {
 }
 
 void displayWinner(int player) {
-  /*
+  
   int mod = (millis() / 50) % NUM_COLS;
   //println("PLAYER " + player + " WON!!!" + " mod=" + mod);
 
@@ -904,18 +885,17 @@ void displayWinner(int player) {
     for (int y = 0; y < NUM_ROWS; y++) {
       for (int x = 0; x < NUM_COLS; x++) {
         int loc = x + y * NUM_COLS;
-        uint32_t player_col = pix0.Color(players[player].r*global_brightness, players[player].g*global_brightness, players[player].b*global_brightness);
-        pixel[x][y] = player_col;
-        if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y] = blank_col;
+        //uint32_t player_col = pix0.Color(players[player].r*global_brightness, players[player].g*global_brightness, players[player].b*global_brightness);
+        pixel[x][y].set(players[player].col);// = player_col;
+        if (loc % NUM_COLS == mod || (loc + NUM_COLS / 3) % NUM_COLS == mod || (loc + (NUM_COLS / 3) * 2) % NUM_COLS == mod ) pixel[x][y].set(blank_col);
       }
     }
   }  
   else{
     String title_text = "winner winner";
-    //int title_x = NUM_COLS - (millis() / 100) % (title_text.length() * (LETTER_WIDTH + 1) + NUM_COLS);
     int title_x = NUM_COLS - (millis() / 100) %  NUM_COLS;
-    uint32_t player_col = pix0.Color(players[player].r*global_brightness, players[player].g*global_brightness, players[player].b*global_brightness);
-    printWord(title_text,  player_col, title_x, true);
+    //uint32_t player_col = pix0.Color(players[player].r*global_brightness, players[player].g*global_brightness, players[player].b*global_brightness);
+    printWord(title_text,  players[player].col, title_x, true);
   }
 
   if (millis() > end_game_over_time) {
@@ -923,11 +903,12 @@ void displayWinner(int player) {
     button_lock_timer = millis() + button_lock_time;
   }
 
-//  //set the buttons
-//  for (int i=0; i<NUM_BUTTONS; i++){
-//    button_pixels.setPixelColor(i, button_pixels.Color(115,115,115)); 
-//  }
-*/
+  //set the buttons
+  for (int i=0; i<NUM_BUTTONS; i++){
+    float prc = 0.5 + sin(millis()/100) * 0.5;
+    buttons[i].col.set(players[player].col, prc);
+  }
+
 }
 
 void displaySettings(){
