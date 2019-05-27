@@ -1026,11 +1026,17 @@ void setLEDs() {
   }
 
   //update the button colors
+  bool button_changed = false;
   for (int i=0; i<NUM_BUTTONS; i++){
-    //button_pixels.setPixelColor( buttons[i].led_id, buttons[i].col);
-    button_pixels.setPixelColor( buttons[i].led_id, buttons[i].col.get_uint());
+    if(buttons[i].col.has_been_changed){
+      button_pixels.setPixelColor( buttons[i].led_id, buttons[i].col.get_uint());
+      buttons[i].col.has_been_changed = false;
+      button_changed = true;
+    }
   }
-  button_pixels.show();
+  if (button_changed){
+    button_pixels.show();
+  }
 }
 
 /*
