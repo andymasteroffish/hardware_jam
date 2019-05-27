@@ -244,7 +244,7 @@ void reset() {
 void startJoinScreen(){
   gameState = STATE_JOIN;
   join_sreen_start_time = millis();
-  join_screen_end_timer = 100;//1500;
+  join_screen_end_timer = 1500;
   for (int i=0; i<MAX_NUM_PLAYERS; i++){
     join_areas[i].reset();
   }
@@ -798,10 +798,7 @@ void displayPregame() {
   resetMatrix();
 
   
-  //show the join areas
-  for (int i=0; i<num_players; i++){
-    join_areas[i].update(delta_millis, pixel);
-  }
+  
 
   //show the characters coming in with arrows
   int trackPos = (NUM_COLS / 2) - pregameStep;
@@ -833,6 +830,10 @@ void displayPregame() {
     }
   }
 
+  //show the join areas
+  for (int i=0; i<num_players; i++){
+    join_areas[i].update(delta_millis, pixel);
+  }
 
   //blink the game
   if (pregameStep > NUM_COLS / 2) {

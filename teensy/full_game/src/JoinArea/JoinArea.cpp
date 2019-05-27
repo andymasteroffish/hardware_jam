@@ -14,8 +14,8 @@ void JoinArea::setup(int _x, ColorHolder * _col){
 	col_width = 5;
 
 
-	join_anim_time = 500;
-	game_start_anim_time = 1000;
+	join_anim_time = 100;
+	game_start_anim_time = 700;
 
 	reset();
 }
@@ -34,9 +34,9 @@ void JoinArea::update(int delta_millis, ColorHolder (&pixel)[NUM_COLS][NUM_ROWS]
 	if (doing_join_anim){
 		update_join(delta_millis, pixel);
 	}
-
+	
 	if (doing_game_start_anim && player_joined){
-		update_join(delta_millis, pixel);
+		update_game_start(delta_millis, pixel);
 	}	
 }
 
@@ -66,7 +66,7 @@ void JoinArea::update_join(int delta_millis, ColorHolder (&pixel)[NUM_COLS][NUM_
 void JoinArea::update_game_start(int delta_millis, ColorHolder (&pixel)[NUM_COLS][NUM_ROWS]){
 
 	float anim_prc = 1.0 - (float)anim_timer/(float)game_start_anim_time;
-	float max_dist = 3 * anim_prc;
+	float max_dist = 4 * anim_prc;
 	float fade_range = 1.0;
 
 	if (max_dist < -fade_range){
@@ -92,7 +92,9 @@ void JoinArea::update_game_start(int delta_millis, ColorHolder (&pixel)[NUM_COLS
 				power *= 0.5f;	//we need to really fade this thing to see any difference
 			}
 
-			pixel[x][y].set(col, power);
+			if (power > 0){
+				pixel[x][y].set(col, power);
+			}
 		}
 	}
 
@@ -107,6 +109,7 @@ void JoinArea::mark_ready(){
 
 void JoinArea::mark_game_start(int _player_y){
 	anim_timer = 0;
+	doing_join_anim = false;
 	doing_game_start_anim = true;
 	player_y = _player_y;
 }
