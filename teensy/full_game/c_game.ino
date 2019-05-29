@@ -124,7 +124,7 @@ void setup() {
   //buttons
   button_pixels.begin();
 
-  delta_millis = 0;
+  deltaMillis = 0;
   prev_frame_millis = millis();
 
   //some default colors
@@ -252,7 +252,7 @@ void startJoinScreen(){
 }
 
 void loop() {
-  delta_millis = millis() - prev_frame_millis;
+  deltaMillis = millis() - prev_frame_millis;
   prev_frame_millis = millis();
   checkInput();
 
@@ -700,7 +700,7 @@ void displayJoin(){
   //show who's there
   int col_w = 5;
   for (int i=0; i<num_players; i++){
-    join_areas[i].update(delta_millis, pixel);
+    join_areas[i].update(deltaMillis, pixel);
   }
 
   //time to move on?
@@ -711,13 +711,14 @@ void displayJoin(){
     }
   }
   if (num_in == num_players){
-    join_screen_end_timer -= delta_millis;
+    join_screen_end_timer -= deltaMillis;
   }
 
   if (join_screen_end_timer < 0){
     reset();
     pregameStep = 0;
     nextPregameStepTime = millis();
+    pregameTimer = 0;
   }
 
   //gentle arrows to direct players
@@ -780,7 +781,7 @@ void displayJoin(){
 }
 
 void displayPregame() {
-  
+  pregameTimer += deltaMillis;
   //time to advance
   if (millis() > nextPregameStepTime) {
     nextPregameStepTime = millis() + 60;
@@ -803,36 +804,45 @@ void displayPregame() {
   //show the characters coming in with arrows
   int trackPos = (NUM_COLS / 2) - pregameStep;
   if (trackPos < 0)  trackPos = 0;
+
+  int glow_fade_in_time = 300;
+  float glow_prc = (float)pregameTimer / (float)glow_fade_in_time;
+  if (glow_prc > 1){
+    glow_prc = 1;
+  }else{
+    glow_prc = pow(glow_prc, 3);
+  }
+  
   for (int p = 0; p < num_players; p++) {
     for (int i = 0; i < trackPos; i++) {
       int x1 = (playerStarts[p] + i) % NUM_COLS;
       int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
 
       if (i != trackPos - 3) {
-        pixel[x1][players[p].y].set(&players[p].col);// = player_col;
-        pixel[x2][players[p].y].set(&players[p].col);//;
+        pixel[x1][players[p].y].set(&players[p].col, glow_prc);
+        pixel[x2][players[p].y].set(&players[p].col, glow_prc);
       }
 
       //arrow tail
       if (i == trackPos - 1) {
         int x1Shift = (x1 + 1) % NUM_COLS;
         int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
-        pixel[x1][players[p].y - 1].set(&players[p].col);
-        pixel[x1Shift][players[p].y - 1].set(&players[p].col);
-        pixel[x1Shift][players[p].y + 1].set(&players[p].col);
-        pixel[x1][players[p].y + 1].set(&players[p].col);
+        pixel[x1][players[p].y - 1].set(&players[p].col, glow_prc);
+        pixel[x1Shift][players[p].y - 1].set(&players[p].col, glow_prc);
+        pixel[x1Shift][players[p].y + 1].set(&players[p].col, glow_prc);
+        pixel[x1][players[p].y + 1].set(&players[p].col, glow_prc);
 
         pixel[x2][players[p].y - 1].set(&players[p].col);
-        pixel[x2Shift][players[p].y - 1].set(&players[p].col);
-        pixel[x2Shift][players[p].y + 1].set(&players[p].col);
-        pixel[x2][players[p].y + 1].set(&players[p].col);
+        pixel[x2Shift][players[p].y - 1].set(&players[p].col, glow_prc);
+        pixel[x2Shift][players[p].y + 1].set(&players[p].col, glow_prc);
+        pixel[x2][players[p].y + 1].set(&players[p].col, glow_prc);
       }
     }
   }
 
   //show the join areas
   for (int i=0; i<num_players; i++){
-    join_areas[i].update(delta_millis, pixel);
+    join_areas[i].update(deltaMillis, pixel);
   }
 
   //blink the game

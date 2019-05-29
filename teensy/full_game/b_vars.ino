@@ -21,7 +21,7 @@ int playerStarts[MAX_NUM_PLAYERS];
 int winner = -1;
 int gameState = STATE_INTRO;
 
-int delta_millis;
+int deltaMillis;
 int prev_frame_millis;
 
 //timing out game over
@@ -40,6 +40,7 @@ ColorHolder testo;
 //pregame intro
 int pregameStep = 0;
 int nextPregameStepTime = 0;
+int pregameTimer = 0;
 
 //using serial for a debug display in processing
 String debug_display_buffer = "";       //buffer size maxes out at 64 bytes, our messages can be up to 8 chars long, so max of 8 pixels per message
