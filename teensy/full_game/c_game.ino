@@ -11,6 +11,14 @@ void setup() {
   gameState = STATE_INTRO;
   winner = -1;
 
+  //some default colors
+  int col_val = 100;
+  blank_col.set(0,0,0);
+  blocker_col.set(col_val,0,0);
+  shifter_col.set(col_val,col_val,col_val);
+  accelerator_col.set(0,col_val,0);
+  reverse_col.set(col_val,0,col_val);
+
   //default states
   resetMatrix();
 
@@ -36,38 +44,34 @@ void setup() {
 
   //setup obstacles
   for (int i = 0; i < NUM_OBSTACLES; i++) {
-    //obstacles[i] = new Obstacle();
-    obstacles[i].x = (NUM_COLS / NUM_OBSTACLES) * i;
-    for (int r = 0; r < NUM_ROWS; r++) {
-      obstacles[i].onRows[r] = false;
-    }
+    
+    int start_x = (NUM_COLS / NUM_OBSTACLES) * i;
+    obstacles[i].setup (start_x, &blocker_col, &shifter_col, &accelerator_col, &reverse_col);
+//    for (int r = 0; r < NUM_ROWS; r++) {
+//      obstacles[i].onRows[r] = false;
+//    }
   }
 
   //set the types
-  //moving the X values to match the buttons
-  obstacles[0].action = 'b';
-  obstacles[1].action = 'b';
-  obstacles[2].action = 'b';
-  obstacles[3].action = 'b';
-  obstacles[4].action = 'b';
-  obstacles[5].action = 'b';
-  obstacles[6].action = 'b';
-  obstacles[7].action = 'b';
+//  obstacles[0].action = 'b';
+//  obstacles[1].action = 'b';
+//  obstacles[2].action = 'b';
+//  obstacles[3].action = 'b';
+//  obstacles[4].action = 'b';
+//  obstacles[5].action = 'b';
+//  obstacles[6].action = 'b';
+//  obstacles[7].action = 'b';
 
-  //adjusting them into place
-  obstacles[0].x = 9;
-  obstacles[1].x += 10;
-  obstacles[2].x += 8;
-  obstacles[3].x += 10;
-  obstacles[4].x += 9;
-  obstacles[5].x += 10;
-  obstacles[6].x += 8;
-  obstacles[7].x += 10;
+  //adjusting them into place (it would be way better to just figure these values out and hard set them)
+  obstacles[0].x = 8;
+  obstacles[1].x += 0;
+  obstacles[2].x += 7;
+  obstacles[3].x += 9;
+  obstacles[4].x += 8;
+  obstacles[5].x += 9;
+  obstacles[6].x += 7;
+  obstacles[7].x += 9;
 
-  //just move them allover a bit
-  for (int i = 0; i < NUM_OBSTACLES; i ++) {
-    obstacles[i].x-= 1;
-  }
 
   //buttons
   buttons[0].pin = 3;
@@ -106,20 +110,6 @@ void setup() {
     leds[i].begin();
     leds[i].show();
   }
-//  pix0.begin();
-//  pix0.show();
-//
-//  pix1.begin();
-//  pix1.show();
-//
-//  pix2.begin();
-//  pix2.show();
-//
-//  pix3.begin();
-//  pix3.show();
-//
-//  pix4.begin();
-//  pix4.show();
 
   //buttons
   button_pixels.begin();
@@ -127,13 +117,7 @@ void setup() {
   deltaMillis = 0;
   prev_frame_millis = millis();
 
-  //some default colors
-  int col_val = 100;
-  blank_col.set(0,0,0);
-  blocker_col.set(col_val,0,0);
-  shifter_col.set(col_val,col_val,col_val);
-  accelerator_col.set(0,col_val,0);
-  reverse_col.set(col_val,0,col_val);
+  
   
   
   //go right to the game if we're tetsing
@@ -153,45 +137,41 @@ void reset() {
     //    String this_massage = "set obstacle" + String(i);
     //    Serial.print(this_massage);
     if (i%2==1){
-      obstacles[i].action = 'b';
+      obstacles[i].set_action('b');
     }else{
       int rand_val = (int)random(0, 3);
-      if (rand_val == 0) obstacles[i].action = 'a';
-      if (rand_val == 1) obstacles[i].action = 's';
-      if (rand_val == 2) obstacles[i].action = 'r';
+      if (rand_val == 0) obstacles[i].set_action('a');
+      if (rand_val == 1) obstacles[i].set_action('s');
+      if (rand_val == 2) obstacles[i].set_action('r');
     }
   }
   //make sure we have at leats one accelerator
   int rand_obstacle = (int)random(0, 3) * 2;
-  //  String another_massage = "set obstacle" + String(rand_obstacle);
-  //  Serial.print(another_massage);
-  obstacles[rand_obstacle].action = 'a';
+  obstacles[rand_obstacle].set_action('a');
 
-
-  String ("done setting obstacles");
 
   //set them up
-  for (int i = 0; i < NUM_OBSTACLES; i++) {
-    for (int k = 0; k < 5; k++) {
-      obstacles[i].onRows[k] = false;
-    }
-    if (obstacles[i].action == 's') {
-      obstacles[i].onRows[0] = true;
-      obstacles[i].onRows[1] = true;
-    }
-    if (obstacles[i].action == 'b') {
-      obstacles[i].onRows[0] = true;
-      obstacles[i].onRows[1] = true;
-    }
-    if (obstacles[i].action == 'a') {
-      obstacles[i].onRows[0] = true;
-      obstacles[i].onRows[1] = true;
-    }
-    if (obstacles[i].action == 'r') {
-      obstacles[i].onRows[0] = true;
-      obstacles[i].onRows[1] = true;
-    }
-  }
+//  for (int i = 0; i < NUM_OBSTACLES; i++) {
+//    for (int k = 0; k < 5; k++) {
+//      obstacles[i].onRows[k] = false;
+//    }
+//    if (obstacles[i].action == 's') {
+//      obstacles[i].onRows[0] = true;
+//      obstacles[i].onRows[1] = true;
+//    }
+//    if (obstacles[i].action == 'b') {
+//      obstacles[i].onRows[0] = true;
+//      obstacles[i].onRows[1] = true;
+//    }
+//    if (obstacles[i].action == 'a') {
+//      obstacles[i].onRows[0] = true;
+//      obstacles[i].onRows[1] = true;
+//    }
+//    if (obstacles[i].action == 'r') {
+//      obstacles[i].onRows[0] = true;
+//      obstacles[i].onRows[1] = true;
+//    }
+//  }
 
   gameState = STATE_PREGAME;
 
@@ -234,7 +214,7 @@ void reset() {
   for (int i = 0; i < NUM_OBSTACLES; i++) {
     int presses = (int)random(0, NUM_ROWS);
     for (int k = 0; k < presses; k++) {
-      shiftObstacle(i);
+      obstacles[i].shift();
     }
   }
 
@@ -338,22 +318,20 @@ void advancePlayer(int p) {
   }
 
   //check for obstacles
-  //if (players[0].dist_traveled > NUM_COLS+2){     //no getting hit on your first time around
-    for (int i = 0; i < NUM_OBSTACLES; i++) {
-      if (obstacles[i].x == players[p].x) {
-        boolean hitMe = false;
-        for (int r = 0; r < NUM_ROWS; r++) {
-          if (obstacles[i].onRows[r] && r == players[p].y) {
-            //dis fool hit duh obsacle lolz
-            hitMe = true;
-          }
-        }
-        if (hitMe) {
-          doObstacleEffect(p, i);
+  for (int i = 0; i < NUM_OBSTACLES; i++) {
+    if (obstacles[i].x == players[p].x) {
+      boolean hitMe = false;
+      for (int r = 0; r < NUM_ROWS; r++) {
+        if (obstacles[i].on_rows[r] && r == players[p].y) {
+          //dis fool hit duh obsacle lolz
+          hitMe = true;
         }
       }
+      if (hitMe) {
+        doObstacleEffect(p, i);
+      }
     }
-  //}
+  }
 }
 
 void doObstacleEffect(int p, int o) {
@@ -364,11 +342,9 @@ void doObstacleEffect(int p, int o) {
     killPlayer(p);
   }
 
-  //accelerate (or slow down????)
+  //accelerate
   if (action == 'a') {
     players[p].speed *= speedMult;
-    //trying out slowing the player down!
-    //players[p].speed *= slowDownMult;
     //keep it positive
     if (players[p].speed < 10)    players[p].speed = 10;
   }
@@ -382,7 +358,7 @@ void doObstacleEffect(int p, int o) {
   if (action == 's') {
     //go through and find the other row that is on
     for (int r = 0; r < NUM_ROWS; r++) {
-      if (players[p].y != r && obstacles[o].onRows[r]) {
+      if (players[p].y != r && obstacles[o].on_rows[r]) {
         players[p].y = r;
         break;
       }
@@ -457,13 +433,9 @@ void checkInput() {
 }
 
 void button_pressed(int id) {
-  if (!use_debug_serial_display) {
-    //    Serial.print("pressed ");
-    //    Serial.println(id);
-    Serial.print("button pin ");
-    Serial.println(buttons[id].pin);
-    //return; //kill me
-  }
+  Serial.print("button pin ");
+  Serial.println(buttons[id].pin);
+  
   //reset the game if we're not playing
   if (gameState == STATE_INTRO) {
     startJoinScreen();
@@ -477,16 +449,17 @@ void button_pressed(int id) {
   }
 
   //bump this obstacle down one
-  shiftObstacle(id);
+  obstacles[id].shift();
 }
 
-void shiftObstacle(int id) {
-  boolean temp = obstacles[id].onRows[NUM_ROWS - 1];
-  for (int r = NUM_ROWS - 1; r > 0; r--) {
-    obstacles[id].onRows[r] = obstacles[id].onRows[r - 1];
-  }
-  obstacles[id].onRows[0] = temp;
-}
+//this is handled in the Obstacle class now
+//void shiftObstacle(int id) {
+//  boolean temp = obstacles[id].onRows[NUM_ROWS - 1];
+//  for (int r = NUM_ROWS - 1; r > 0; r--) {
+//    obstacles[id].onRows[r] = obstacles[id].onRows[r - 1];
+//  }
+//  obstacles[id].onRows[0] = temp;
+//}
 
 void displayGame() {
   
@@ -532,17 +505,21 @@ void displayGame() {
 
     //add the obstacles
     for (int i = 0; i < NUM_OBSTACLES; i++) {
-      //get the color
-      ColorHolder * color = &blank_col;
-      if (obstacles[i].action == 'b') color = &blocker_col;//.r*global_brightness,   blocker_col.g*global_brightness, blocker_col.b*global_brightness);
-      if (obstacles[i].action == 's') color = &shifter_col;//.r*global_brightness, shifter_col.g*global_brightness, shifter_col.b*global_brightness);
-      if (obstacles[i].action == 'a') color = &accelerator_col;//.r*global_brightness, accelerator_col.g*global_brightness,   accelerator_col.b*global_brightness);
-      if (obstacles[i].action == 'r') color = &reverse_col;//.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
+//      //get the color
+//      ColorHolder * color = &blank_col;
+//      if (obstacles[i].action == 'b') color = &blocker_col;//.r*global_brightness,   blocker_col.g*global_brightness, blocker_col.b*global_brightness);
+//      if (obstacles[i].action == 's') color = &shifter_col;//.r*global_brightness, shifter_col.g*global_brightness, shifter_col.b*global_brightness);
+//      if (obstacles[i].action == 'a') color = &accelerator_col;//.r*global_brightness, accelerator_col.g*global_brightness,   accelerator_col.b*global_brightness);
+//      if (obstacles[i].action == 'r') color = &reverse_col;//.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
+
+      obstacles[i].update(deltaMillis);
+
+      ColorHolder * color = &obstacles[i].col;
 
       buttons[i].col.set(color);
       
       for (int r = 0; r < NUM_ROWS; r++) {
-        if (obstacles[i].onRows[r]) {
+        if (obstacles[i].on_rows[r]) {
           pixel[obstacles[i].x][r].set(color);
         }
       }

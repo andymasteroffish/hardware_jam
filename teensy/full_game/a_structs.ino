@@ -3,11 +3,11 @@
   s - shifter
   a - accelerator
   r - reverse       */
-struct Obstacle {
-  int x;
-  char action;
-  boolean onRows[NUM_ROWS];
-};
+//struct Obstacle {
+//  int x;
+//  char action;
+//  boolean onRows[NUM_ROWS];
+//};
 
 //Player info
 struct Player {

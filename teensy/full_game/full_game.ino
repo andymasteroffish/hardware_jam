@@ -7,6 +7,7 @@
 #include "src/Adafruit_DotStar/Adafruit_DotStar.h" 
 #include "src/ColorHolder/ColorHolder.h" 
 #include "src/JoinArea/JoinArea.h" 
+#include "src/Obstacle.h" 
 
 //global defines
 #define NUM_COLS 96

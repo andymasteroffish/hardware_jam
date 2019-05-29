@@ -1,6 +1,4 @@
-/* 
-	Helper class for dealing with color
-*/
+
 
 #ifndef JoinArea_h
 #define JoinArea_h
