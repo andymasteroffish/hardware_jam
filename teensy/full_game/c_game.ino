@@ -26,19 +26,19 @@ void setup() {
   //blue
   players[0].identifier = 0;
   players[0].col.set(0,0,136);
-  playerStarts[0] = 8;
+  playerStarts[0] = 10;
   join_areas[0].setup(8, &players[0].col);
 
   //yellow
   players[1].identifier = 10;
   players[1].col.set(136,136,0);
-  playerStarts[1] = 22;
-  join_areas[1].setup(22, &players[1].col);
+  playerStarts[1] = 21;
+  join_areas[1].setup(20, &players[1].col);
 
   //orange
   players[2].identifier = 20;
   players[2].col.set(200,50,0);
-  playerStarts[2] = 31;
+  playerStarts[2] = 30;
   join_areas[2].setup(31, &players[2].col);
   
 
@@ -64,7 +64,7 @@ void setup() {
 
   //adjusting them into place (it would be way better to just figure these values out and hard set them)
   obstacles[0].x = 8;
-  obstacles[1].x += 0;
+  obstacles[1].x += 8;
   obstacles[2].x += 7;
   obstacles[3].x += 9;
   obstacles[4].x += 8;
@@ -624,11 +624,11 @@ void displayIntro() {
   float anim_time = time_val;
   float anim_range = 2.0f;
   
-  int steps = NUM_BUTTONS+4;
+  int steps = NUM_BUTTONS;
   while(anim_time > (float)steps){
     anim_time -= (float)steps;
   }
-  anim_time -= 2;
+  //anim_time -= 2;
   
 
   //Serial.println(anim_time);
@@ -639,9 +639,12 @@ void displayIntro() {
     float b = 255;
 
     float prc = 0;
-
+    float my_time = (NUM_BUTTONS-1-i);
     
-    float this_time = abs(anim_time-( (NUM_BUTTONS-1-i)+1));
+    float this_time_a = abs(anim_time-my_time);
+    float this_time_b = abs( (anim_time-steps)-my_time);
+    float this_time = min(this_time_a, this_time_b);//, this_time_c));
+        
     if (this_time < anim_range){
       prc = 1.0 - this_time / (float)anim_range;
     }

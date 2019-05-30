@@ -66,13 +66,14 @@ void Obstacle::update(int deltaMillis){
 		float prc = (float)shift_timer / (float)shift_anim_time;
 		prc = powf(prc, 3);	//keep it low
 
-		int alt_r = 255;
-		int alt_g = 255;
-		int alt_b = 255;
+		int alt_r = 175;
+		int alt_g = 175;
+		int alt_b = 175;
+
 
 		int new_r = resting_col->r * prc + alt_r * (1.0-prc);
-		int new_g = resting_col->r * prc + alt_r * (1.0-prc);
-		int new_b = resting_col->r * prc + alt_r * (1.0-prc);
+		int new_g = resting_col->g * prc + alt_g * (1.0-prc);
+		int new_b = resting_col->b * prc + alt_b * (1.0-prc);
 
 		col.set(new_r, new_g, new_b);
 	}
