@@ -8,6 +8,7 @@
 #include "src/ColorHolder/ColorHolder.h" 
 #include "src/JoinArea/JoinArea.h" 
 #include "src/Obstacle.h" 
+#include "src/DeathEffect.h" 
 
 //global defines
 #define NUM_COLS 96
@@ -16,6 +17,7 @@
 #define NUM_OBSTACLES 8
 #define MAX_NUM_PLAYERS 3
 #define MAX_TRAILS 3
+#define MAX_NUM_DEATH_EFFECTS 8
 
 #define LETTER_WIDTH 5
 

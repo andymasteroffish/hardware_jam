@@ -17,6 +17,7 @@ int speed_up_ammount = 2;//5;
 Obstacle obstacles[NUM_OBSTACLES];
 Player players[MAX_NUM_PLAYERS];
 int playerStarts[MAX_NUM_PLAYERS];
+DeathEffect death_effects[MAX_NUM_DEATH_EFFECTS];
 
 int winner = -1;
 int gameState = STATE_INTRO;
@@ -33,7 +34,6 @@ int deathAnimStepTime = 150;
 
 //maintaining pixels
 ColorHolder pixel[NUM_COLS][NUM_ROWS];
-//uint32_t last_sent_grid[NUM_COLS][NUM_ROWS];
 
 ColorHolder testo;
 
@@ -74,16 +74,6 @@ float global_brightness =  1.0f;
 Adafruit_NeoPixel button_pixels = Adafruit_NeoPixel(NUM_BUTTONS, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 //LEDs
-//this is ugly, but putting them in an array from the start keeps failing
-//data pin then clock pin
-//data is green, clock is yellow
-//Adafruit_DotStar pix0 = Adafruit_DotStar(NUM_COLS, 4, 5 , DOTSTAR_BRG);
-//Adafruit_DotStar pix1 = Adafruit_DotStar(NUM_COLS, 6, 7, DOTSTAR_BRG);
-//Adafruit_DotStar pix2 = Adafruit_DotStar(NUM_COLS + 1, 11, 12, DOTSTAR_BRG);
-//Adafruit_DotStar pix3 = Adafruit_DotStar(NUM_COLS + 1, 13, 14, DOTSTAR_BRG);  //right now this strip is messed up and we skip the first LED
-//Adafruit_DotStar pix4 = Adafruit_DotStar(NUM_COLS + 1 , 15, 16, DOTSTAR_BRG); //there was an extra LED on this one
-
-
 Adafruit_DotStar leds[] = {
   Adafruit_DotStar(NUM_COLS, 4, 5 , DOTSTAR_BRG),
   Adafruit_DotStar(NUM_COLS, 6, 7, DOTSTAR_BRG),

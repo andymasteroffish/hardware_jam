@@ -23,9 +23,9 @@ struct Player {
   int dist_traveled;
 
   //death animation
-  boolean doingDeathAnim;
-  int deathAnimStep;
-  int nextDeathAnimStepTime;
+//  boolean doingDeathAnim;
+//  int deathAnimStep;
+//  int nextDeathAnimStepTime;
 };
 
 //buttons

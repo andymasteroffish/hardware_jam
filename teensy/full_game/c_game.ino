@@ -176,8 +176,8 @@ void reset() {
     players[i].dir = 1;
     players[i].dist_traveled = 0;
 
-    players[i].doingDeathAnim = false;
-    players[i].deathAnimStep = 0;
+//    players[i].doingDeathAnim = false;
+//    players[i].deathAnimStep = 0;
 
     //if this player is out or did not join mark them as dead
     if (i >= num_players || !join_areas[i].player_joined){
@@ -259,6 +259,13 @@ void runGame() {
     if (millis() > players[i].nextMoveTime && players[i].speed > 0 && (live_players > 1 || !checkDeathAnimations()) ) {
       advancePlayer(i);
       players[i].nextMoveTime = millis() + players[i].speed;
+    }
+  }
+
+  //any active death effects?
+  for (int i=0; i<MAX_NUM_DEATH_EFFECTS; i++){
+    if (death_effects[i].is_active){
+      death_effects[i].update();
     }
   }
 
@@ -345,8 +352,20 @@ void doObstacleEffect(int p, int o) {
 
 void killPlayer(int id) {
   players[id].speed = 0;
-  players[id].doingDeathAnim = true;
-  players[id].nextDeathAnimStepTime = millis() + deathAnimStepTime;
+  //make some death effects
+  int count = 0;
+  for (int i=0; i<MAX_NUM_DEATH_EFFECTS; i++){
+    if (!death_effects[i].is_active){
+      float angle = PI/8;
+      if (count == 1) angle = PI/4;
+      if (count == 2) angle = (3*PI)/4;
+      if (count == 3) angle = PI - PI/8;
+      death_effects[i].reset(players[id].x, players[id].y, angle, &players[id].col);
+      count++;
+    }
+  }
+//  players[id].doingDeathAnim = true;
+//  players[id].nextDeathAnimStepTime = millis() + deathAnimStepTime;
 }
 
 int checkWinners() { //returns winner index if won
@@ -367,11 +386,16 @@ int checkWinners() { //returns winner index if won
 }
 
 boolean checkDeathAnimations() {
-  for (int i = 0; i < num_players; i++) {
-    if (players[i].doingDeathAnim == true) {
+  for (int i=0; i<MAX_NUM_DEATH_EFFECTS; i++){
+    if (death_effects[i].is_active){
       return true;
     }
   }
+//  for (int i = 0; i < num_players; i++) {
+//    if (players[i].doingDeathAnim == true) {
+//      return true;
+//    }
+//  }
   return false;
 }
 
@@ -438,8 +462,6 @@ void displayGame() {
   //Serial.println("doing display");
   //do the player trails before the obstacles
   for (int i = 0; i < num_players; i++) {
-
-
     //getting the trial positions here to be sure that they loop correctly
     //previously these were causing index out of bounds errors
     //Updated: hardcoded trails for time ... fix later to make dynamic
@@ -448,7 +470,8 @@ void displayGame() {
     int trail_x_3 = (players[i].x - players[i].dir * 3 + NUM_COLS) % NUM_COLS;
     int trail_x_4 = (players[i].x - players[i].dir * 4 + NUM_COLS) % NUM_COLS;
 
-    if (!players[i].doingDeathAnim && players[i].speed != 0) {
+    //if (!players[i].doingDeathAnim && players[i].speed != 0) {
+    if (players[i].speed != 0) {
       //Serial.println("trails");
       //Trails
       //im not sure what the speed range is like, so just doing generic trails manually for now
@@ -476,15 +499,7 @@ void displayGame() {
 
     //add the obstacles
     for (int i = 0; i < NUM_OBSTACLES; i++) {
-//      //get the color
-//      ColorHolder * color = &blank_col;
-//      if (obstacles[i].action == 'b') color = &blocker_col;//.r*global_brightness,   blocker_col.g*global_brightness, blocker_col.b*global_brightness);
-//      if (obstacles[i].action == 's') color = &shifter_col;//.r*global_brightness, shifter_col.g*global_brightness, shifter_col.b*global_brightness);
-//      if (obstacles[i].action == 'a') color = &accelerator_col;//.r*global_brightness, accelerator_col.g*global_brightness,   accelerator_col.b*global_brightness);
-//      if (obstacles[i].action == 'r') color = &reverse_col;//.r*global_brightness, reverse_col.g*global_brightness, reverse_col.b*global_brightness);
-
       obstacles[i].update(deltaMillis);
-
       ColorHolder * color = &obstacles[i].col;
 
       buttons[i].col.set(color);
@@ -505,8 +520,9 @@ void displayGame() {
           players[i].x = playerStarts[i];
         }
   
-        if (!players[i].doingDeathAnim && players[i].speed != 0) {
-          pixel[players[i].x][players[i].y].set(&players[i].col);// = pix0.Color( players[i].r,  players[i].g,  players[i].b);// players[i].identifier; //full power
+        //if (!players[i].doingDeathAnim && players[i].speed != 0) {
+        if (players[i].speed != 0) {
+          pixel[players[i].x][players[i].y].set(&players[i].col);
         }
         else {
           pixel[players[i].x][players[i].y].blank();
@@ -515,46 +531,53 @@ void displayGame() {
     }
 
     //death animations
-    
-    for (int i = 0; i < num_players; i++) {
-      if (players[i].doingDeathAnim == true) {
-        //how far to go
-        int dist = 1 + players[i].deathAnimStep;
-
-        //get the points
-        int x_left = (players[i].x - dist + NUM_COLS) % NUM_COLS; //these need to loop
-        int x_right = (players[i].x + dist) % NUM_COLS;           //these need to loop
-        int y_top = players[i].y - dist + players[i].deathAnimStep; //adding deathanimstep is like gravity? might be too fast
-        int y_bot = players[i].y + dist + players[i].deathAnimStep;
-        int y_mid = players[i].y + players[i].deathAnimStep;
-
-        //add them to the pixels (last few frames are blank)
-        if (players[i].deathAnimStep < 3) {
-          //diagonal
-          float power = 0.1 - (float)players[i].deathAnimStep * 0.02;
-          if (y_top >= 0)        pixel[x_left][y_top].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);// players[i].identifier + players[i].deathAnimStep; //add the step # so player death particles become 10% weaker each step
-          if (y_bot < NUM_ROWS)  pixel[x_left][y_bot].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-          if (y_top >= 0)        pixel[x_right][y_top].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-          if (y_bot < NUM_ROWS)  pixel[x_right][y_bot].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-
-          //horizontal
-          if (y_mid >= 0 && y_mid < NUM_ROWS) {
-            pixel[x_left][players[i].y].set(&players[i].col, power);// pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-            pixel[x_right][players[i].y].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
-          }
-        }
-
-        //time to update?
-        if (players[i].nextDeathAnimStepTime < millis()) {
-          players[i].deathAnimStep++;
-          players[i].nextDeathAnimStepTime = millis() + deathAnimStepTime;
-
-          if (players[i].deathAnimStep == 5) {
-            players[i].doingDeathAnim = false;
-          }
-        }
+    for (int i=0; i<MAX_NUM_DEATH_EFFECTS; i++){
+      //must be active and in range
+      if (death_effects[i].is_active && death_effects[i].y_int >= 0 && death_effects[i].y_int < NUM_ROWS){
+        int this_x = death_effects[i].x_int % NUM_COLS;
+        int this_y = death_effects[i].y_int;
+        pixel[this_x][this_y].set(&death_effects[i].col);
       }
     }
+//    for (int i = 0; i < num_players; i++) {
+//      if (players[i].doingDeathAnim == true) {
+//        //how far to go
+//        int dist = 1 + players[i].deathAnimStep;
+//
+//        //get the points
+//        int x_left = (players[i].x - dist + NUM_COLS) % NUM_COLS; //these need to loop
+//        int x_right = (players[i].x + dist) % NUM_COLS;           //these need to loop
+//        int y_top = players[i].y - dist + players[i].deathAnimStep; //adding deathanimstep is like gravity? might be too fast
+//        int y_bot = players[i].y + dist + players[i].deathAnimStep;
+//        int y_mid = players[i].y + players[i].deathAnimStep;
+//
+//        //add them to the pixels (last few frames are blank)
+//        if (players[i].deathAnimStep < 3) {
+//          //diagonal
+//          float power = 0.1 - (float)players[i].deathAnimStep * 0.02;
+//          if (y_top >= 0)        pixel[x_left][y_top].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);// players[i].identifier + players[i].deathAnimStep; //add the step # so player death particles become 10% weaker each step
+//          if (y_bot < NUM_ROWS)  pixel[x_left][y_bot].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+//          if (y_top >= 0)        pixel[x_right][y_top].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+//          if (y_bot < NUM_ROWS)  pixel[x_right][y_bot].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+//
+//          //horizontal
+//          if (y_mid >= 0 && y_mid < NUM_ROWS) {
+//            pixel[x_left][players[i].y].set(&players[i].col, power);// pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+//            pixel[x_right][players[i].y].set(&players[i].col, power);// = pix0.Color( players[i].r*power*global_brightness,  players[i].g*power*global_brightness,  players[i].b*power*global_brightness);//players[i].identifier + players[i].deathAnimStep;
+//          }
+//        }
+//
+//        //time to update?
+//        if (players[i].nextDeathAnimStepTime < millis()) {
+//          players[i].deathAnimStep++;
+//          players[i].nextDeathAnimStepTime = millis() + deathAnimStepTime;
+//
+//          if (players[i].deathAnimStep == 5) {
+//            players[i].doingDeathAnim = false;
+//          }
+//        }
+//      }
+//    }
     
   }
   
