@@ -149,30 +149,6 @@ void reset() {
   int rand_obstacle = (int)random(0, 3) * 2;
   obstacles[rand_obstacle].set_action('a');
 
-
-  //set them up
-//  for (int i = 0; i < NUM_OBSTACLES; i++) {
-//    for (int k = 0; k < 5; k++) {
-//      obstacles[i].onRows[k] = false;
-//    }
-//    if (obstacles[i].action == 's') {
-//      obstacles[i].onRows[0] = true;
-//      obstacles[i].onRows[1] = true;
-//    }
-//    if (obstacles[i].action == 'b') {
-//      obstacles[i].onRows[0] = true;
-//      obstacles[i].onRows[1] = true;
-//    }
-//    if (obstacles[i].action == 'a') {
-//      obstacles[i].onRows[0] = true;
-//      obstacles[i].onRows[1] = true;
-//    }
-//    if (obstacles[i].action == 'r') {
-//      obstacles[i].onRows[0] = true;
-//      obstacles[i].onRows[1] = true;
-//    }
-//  }
-
   gameState = STATE_PREGAME;
 
   if (num_players == 2){
@@ -203,8 +179,8 @@ void reset() {
     players[i].doingDeathAnim = false;
     players[i].deathAnimStep = 0;
 
-    //if this player is out, mark them as dead
-    if (i >= num_players){
+    //if this player is out or did not join mark them as dead
+    if (i >= num_players || !join_areas[i].player_joined){
       players[i].speed = 0;
     }
   }
@@ -223,7 +199,7 @@ void reset() {
 
 void startJoinScreen(){
   gameState = STATE_JOIN;
-  join_sreen_start_time = millis();
+  join_screen_start_time = millis();
   join_screen_end_timer = 1500;
   for (int i=0; i<MAX_NUM_PLAYERS; i++){
     join_areas[i].reset();
@@ -441,6 +417,9 @@ void button_pressed(int id) {
     startJoinScreen();
   }else if (gameState == STATE_JOIN){
     if (id < num_players){
+      if (!join_areas[id].player_joined){
+        join_screen_start_time = millis(); //reset this timer
+      }
       join_areas[id].mark_ready();
     }
   }else if (gameState == STATE_GAMEOVER) {
@@ -452,14 +431,6 @@ void button_pressed(int id) {
   obstacles[id].shift();
 }
 
-//this is handled in the Obstacle class now
-//void shiftObstacle(int id) {
-//  boolean temp = obstacles[id].onRows[NUM_ROWS - 1];
-//  for (int r = NUM_ROWS - 1; r > 0; r--) {
-//    obstacles[id].onRows[r] = obstacles[id].onRows[r - 1];
-//  }
-//  obstacles[id].onRows[0] = temp;
-//}
 
 void displayGame() {
   
@@ -658,17 +629,30 @@ void displayJoin(){
   
   resetMatrix();
   
-  float time_on_screen = (millis()-join_sreen_start_time)/1000.0;
+  float time_on_screen = (millis()-join_screen_start_time)/1000.0;
 
+  //how many we got in this game so far?
+  int num_in = 0;
+  for (int i=0; i<num_players; i++){
+    if (join_areas[i].player_joined){
+      num_in++;
+    }
+  }
+
+  //pulse speed changes based on how many players are in
+  float pulse_speed = 10;
+  if (num_in > 1){
+    float prc_time_left = time_on_screen/join_screen_time_limit;
+    float fast_speed = 30;
+    pulse_speed = prc_time_left * fast_speed + (1.0-prc_time_left)*pulse_speed;
+  }
+  
   //pulse the buttons
   for (int i=0; i<num_players; i++){
-    
-    float prc = 0.5 +sin(time_on_screen*10) * 0.5;
-
+    float prc = 0.5 +sin(time_on_screen*pulse_speed) * 0.5;
     if (join_areas[i].player_joined){
       prc = 1;
     }
-
     buttons[i].col.set(&players[i].col, prc);// = button_pixels.Color(r,g,b);
   }
   //blank other buttons
@@ -684,14 +668,15 @@ void displayJoin(){
   }
 
   //time to move on?
-  int num_in = 0;
-  for (int i=0; i<num_players; i++){
-    if (join_areas[i].player_joined){
-      num_in++;
-    }
-  }
   if (num_in == num_players){
     join_screen_end_timer -= deltaMillis;
+  }
+  if (num_in > 1 && time_on_screen > join_screen_time_limit){
+    join_screen_end_timer -= deltaMillis;
+  }
+
+  if (time_on_screen > join_screen_idle_timeout){
+     gameState = STATE_INTRO;
   }
 
   if (join_screen_end_timer < 0){
