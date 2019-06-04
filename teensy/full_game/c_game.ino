@@ -355,7 +355,7 @@ void killPlayer(int id) {
   //make some death effects
   int count = 0;
   for (int i=0; i<MAX_NUM_DEATH_EFFECTS; i++){
-    if (!death_effects[i].is_active){
+    if (!death_effects[i].is_active && count < 4){
       float angle = PI/8;
       if (count == 1) angle = PI/4;
       if (count == 2) angle = (3*PI)/4;
