@@ -56,7 +56,7 @@ int button_lock_time = 1000;
 
 //join screen
 int join_screen_start_time;
-float join_screen_time_limit = 5;     //time before game starts automaticly in seconds
+float join_screen_time_limit = 8;     //time before game starts automaticly in seconds
 float join_screen_idle_timeout = 60;  //in seconds
 int join_screen_end_timer;
 //bool player_joined[MAX_NUM_PLAYERS];

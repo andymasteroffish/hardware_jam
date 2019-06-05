@@ -3,12 +3,12 @@
 #include "DeathEffect.h"
 
 DeathEffect::DeathEffect(){
-	grav = 0.02;
+	grav = 0.006;
 	x_fric = 0.98;
-	y_fric = 0.99;
+	y_fric = 1;//0.99;
 
-	frame_time = 20;
-	fade_time = 1000;
+	frame_time = 10;
+	fade_time = 600;
 
 	is_active = false;
 }
@@ -21,13 +21,20 @@ void DeathEffect::reset(int x, int y, float angle, ColorHolder * player_col){
 
 	resting_col = player_col;
 
-	float starting_force = 0.3;
+	float starting_force = 0.15;
 	x_vel = cos(angle) * starting_force;
 	y_vel = sin(angle) * starting_force;
+
+	y_vel -= starting_force;
 
 	next_update_time = millis();
 	is_active = true;
 	fade_timer = 0;
+
+	Serial.print("set me ");
+	Serial.println(angle);
+	Serial.print("  my y ");
+	Serial.println(y_vel);
 }
 
 void DeathEffect::update (){
@@ -37,6 +44,8 @@ void DeathEffect::update (){
 	}
 	next_update_time += frame_time;
 	fade_timer += frame_time;
+
+	
 
 
 	y_vel += grav;
@@ -54,17 +63,26 @@ void DeathEffect::update (){
 	x_int = round(x_pos);
 	y_int = round(y_pos);
 
-	float fade_prc = (float)fade_timer/(float)fade_time;
+	float fade_prc = 1.0 - (float)fade_timer/(float)fade_time;
 	fade_prc = powf(fade_prc, 3);
 
 	col.set(resting_col, fade_prc);
 
+	Serial.print("update me ");
+	Serial.println(fade_timer);
+	Serial.print("  x ");
+	Serial.print(x_int);
+	Serial.print("  y ");
+	Serial.println(y_int);
+
 
 	if (fade_timer > fade_time){
 		is_active = false;
+		Serial.println(" time out im ded");
 	}
 	if (y_int >= NUM_ROWS){
 		is_active = false;
+		Serial.println(" off screen im ded");
 	}
 
 }

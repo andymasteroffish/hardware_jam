@@ -122,6 +122,9 @@ void setup() {
   
   //go right to the game if we're tetsing
   if (debug_skip_intro) {
+    for (int i=0; i<num_players;i++){
+      join_areas[i].player_joined = true;
+    }
     reset();
     gameState = STATE_GAME;
   }
@@ -356,10 +359,10 @@ void killPlayer(int id) {
   int count = 0;
   for (int i=0; i<MAX_NUM_DEATH_EFFECTS; i++){
     if (!death_effects[i].is_active && count < 4){
-      float angle = PI/8;
-      if (count == 1) angle = PI/4;
-      if (count == 2) angle = (3*PI)/4;
-      if (count == 3) angle = PI - PI/8;
+      float angle = -PI/8;
+      if (count == 1) angle = -PI/4;
+      if (count == 2) angle = -(3*PI)/4;
+      if (count == 3) angle = -PI - PI/8;
       death_effects[i].reset(players[id].x, players[id].y, angle, &players[id].col);
       count++;
     }
@@ -585,7 +588,7 @@ void displayGame() {
 
 void displayIntro() {
   int mod = (millis() / 400) % NUM_COLS;
-  String abc = "-bsar01";
+  String abc = "--sar01";
   //Serial.println("mod=" + mod);
 
   //flashing
@@ -802,28 +805,30 @@ void displayPregame() {
   }
   
   for (int p = 0; p < num_players; p++) {
-    for (int i = 0; i < trackPos; i++) {
-      int x1 = (playerStarts[p] + i) % NUM_COLS;
-      int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
-
-      if (i != trackPos - 3) {
-        pixel[x1][players[p].y].set(&players[p].col, glow_prc);
-        pixel[x2][players[p].y].set(&players[p].col, glow_prc);
-      }
-
-      //arrow tail
-      if (i == trackPos - 1) {
-        int x1Shift = (x1 + 1) % NUM_COLS;
-        int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
-        pixel[x1][players[p].y - 1].set(&players[p].col, glow_prc);
-        pixel[x1Shift][players[p].y - 1].set(&players[p].col, glow_prc);
-        pixel[x1Shift][players[p].y + 1].set(&players[p].col, glow_prc);
-        pixel[x1][players[p].y + 1].set(&players[p].col, glow_prc);
-
-        pixel[x2][players[p].y - 1].set(&players[p].col);
-        pixel[x2Shift][players[p].y - 1].set(&players[p].col, glow_prc);
-        pixel[x2Shift][players[p].y + 1].set(&players[p].col, glow_prc);
-        pixel[x2][players[p].y + 1].set(&players[p].col, glow_prc);
+    if (join_areas[p].player_joined){
+      for (int i = 0; i < trackPos; i++) {
+        int x1 = (playerStarts[p] + i) % NUM_COLS;
+        int x2 = (playerStarts[p] - i + NUM_COLS) % NUM_COLS;
+  
+        if (i != trackPos - 3) {
+          pixel[x1][players[p].y].set(&players[p].col, glow_prc);
+          pixel[x2][players[p].y].set(&players[p].col, glow_prc);
+        }
+  
+        //arrow tail
+        if (i == trackPos - 1) {
+          int x1Shift = (x1 + 1) % NUM_COLS;
+          int x2Shift = (x2 - 1 + NUM_COLS) % NUM_COLS;
+          pixel[x1][players[p].y - 1].set(&players[p].col, glow_prc);
+          pixel[x1Shift][players[p].y - 1].set(&players[p].col, glow_prc);
+          pixel[x1Shift][players[p].y + 1].set(&players[p].col, glow_prc);
+          pixel[x1][players[p].y + 1].set(&players[p].col, glow_prc);
+  
+          pixel[x2][players[p].y - 1].set(&players[p].col);
+          pixel[x2Shift][players[p].y - 1].set(&players[p].col, glow_prc);
+          pixel[x2Shift][players[p].y + 1].set(&players[p].col, glow_prc);
+          pixel[x2][players[p].y + 1].set(&players[p].col, glow_prc);
+        }
       }
     }
   }
@@ -841,7 +846,9 @@ void displayPregame() {
 
     //make sure the players are shown
     for (int i = 0; i < num_players; i++) {
-      pixel[players[i].x][players[i].y].set(&players[i].col);
+      if (join_areas[i].player_joined){
+        pixel[players[i].x][players[i].y].set(&players[i].col);
+      }
     }
   }
 
