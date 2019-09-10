@@ -46,11 +46,11 @@ boolean debug_skip_intro = false;
 boolean debug_no_death = false;
 
 wavTrigger wTrig;             // wav trigger object
-int wav_start = 0; //index of start jingle track
-int wav_join = 1; //index of player join track
-int wav_begin = 2; //index of begin game track
-int wav_shift = 3; //index of shift obstacle track
-int wav_death = 4; //index of death track
+int wav_start = 1; //index of start jingle track
+int wav_join = 2; //index of player join track
+int wav_begin = 3; //index of begin game track
+int wav_shift = 4; //index of shift obstacle track
+int wav_death = 5; //index of death track
 
 //need these function prototypes or else it gets mad about "ColorHolder"
 void printWord(String word, ColorHolder * col, int start_x);
@@ -699,7 +699,7 @@ void button_pressed(int id) {
   //bump this obstacle down one
   obstacles[id].shift();
   
-  if (use_wav_trigger) wTrig.trackPlayPoly(wav_shift); //play shift track
+  if (gameState == STATE_GAME) if (use_wav_trigger) wTrig.trackPlayPoly(wav_shift); //play shift track
 }
 
 
