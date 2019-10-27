@@ -46,11 +46,21 @@ boolean debug_skip_intro = false;
 boolean debug_no_death = false;
 
 wavTrigger wTrig;             // wav trigger object
-int wav_start = 1; //index of start jingle track
-int wav_join = 2; //index of player join track
-int wav_begin = 3; //index of begin game track
-int wav_shift = 4; //index of shift obstacle track
-int wav_death = 5; //index of death track
+int wav_start = 1;  //index of start jingle track (when a session begins, before players join)
+int wav_join = 2;   //index of player join track
+int wav_begin = 3;  //index of begin race track
+int wav_shift = 4;  //index of shift obstacle track
+int wav_death = 5;  //index of death track
+int wav_win = 6;    //index of trakc that plays when a player wins
+int wav_tick = 7;    //index of tick tock sound
+int wav_reverse = 8;
+int wav_accelerate = 9;
+int wav_shift_lanes = 10;
+
+int wav_countdown_a = 11;
+int wav_countdown_b = 12;
+
+bool can_play_shift_sound = false;  //there is a period during the pregame where players can start pressing the buttons
 
 //need these function prototypes or else it gets mad about "ColorHolder"
 void printWord(String word, ColorHolder * col, int start_x);
@@ -167,11 +177,13 @@ int button_lock_time = 1000;
 
 //join screen
 int join_screen_start_time;
-float join_screen_time_limit = 8;     //time before game starts automaticly in seconds
+float join_screen_time_limit = 7;     //time before game starts automaticly in seconds
 float join_screen_idle_timeout = 60;  //in seconds
 int join_screen_end_timer;
 //bool player_joined[MAX_NUM_PLAYERS];
 JoinArea join_areas[MAX_NUM_PLAYERS];
+
+int join_screen_tick_timer = 0;
 
 //going to settings mode
 int settings_timer = 0;
@@ -229,6 +241,12 @@ void setup() {
     wTrig.samplerateOffset(0);
     
     wTrig.masterGain(0);  //set gain to default
+
+    
+    wTrig.trackGain(wav_shift, -15);
+    wTrig.trackGain(wav_accelerate, -6);
+    wTrig.trackGain(wav_countdown_a, -20);
+    wTrig.trackGain(wav_countdown_b, -10);
 
     /* some useful commands for wav trigger:
      *  wTrig.stopAllTracks(); //stops all tracks
@@ -487,6 +505,9 @@ void runGame() {
     gameState = STATE_GAMEOVER;
     game_over_time = millis();
     end_game_over_time = millis() + max_game_over_time;
+    can_play_shift_sound = false;
+    //play the sound
+    if (use_wav_trigger) wTrig.trackPlayPoly(wav_win);
     //if the game just ended, lock the buttons for a bit
     button_lock_timer = millis() + button_lock_time;
     if (use_debug_serial_display) {
@@ -572,11 +593,13 @@ void doObstacleEffect(int p, int o) {
     players[p].speed *= speedMult;
     //keep it positive
     if (players[p].speed < 10)    players[p].speed = 10;
+    if (use_wav_trigger) wTrig.trackPlayPoly(wav_accelerate); 
   }
 
   //reverse
   if (action == 'r') {
     players[p].dir = -players[p].dir;
+    if (use_wav_trigger) wTrig.trackPlayPoly(wav_reverse); 
   }
 
   //shift
@@ -588,7 +611,7 @@ void doObstacleEffect(int p, int o) {
         break;
       }
     }
-
+    if (use_wav_trigger) wTrig.trackPlayPoly(wav_shift_lanes); 
   }
 }
 
@@ -699,7 +722,7 @@ void button_pressed(int id) {
   //bump this obstacle down one
   obstacles[id].shift();
   
-  if (gameState == STATE_GAME) if (use_wav_trigger) wTrig.trackPlayPoly(wav_shift); //play shift track
+  if (can_play_shift_sound) if (use_wav_trigger) wTrig.trackPlayPoly(wav_shift); //play shift track
 }
 
 
@@ -915,6 +938,14 @@ void displayJoin(){
     float prc_time_left = time_on_screen/join_screen_time_limit;
     float fast_speed = 30;
     pulse_speed = prc_time_left * fast_speed + (1.0-prc_time_left)*pulse_speed;
+
+    //playing the tick sound
+    join_screen_tick_timer++;
+    float max_tick_time = 15 + (1.0-prc_time_left) * 45;
+    if (join_screen_tick_timer > max_tick_time){
+      if (use_wav_trigger) wTrig.trackPlayPoly(wav_tick); //play start track
+      join_screen_tick_timer = 0;
+    }
   }
   
   //pulse the buttons
@@ -1018,9 +1049,12 @@ void displayJoin(){
 void displayPregame() {
   pregameTimer += deltaMillis;
   //time to advance
+  int step_length = 60;
+  bool step_changed_this_frame = false;
   if (millis() > nextPregameStepTime) {
-    nextPregameStepTime = millis() + 60;
+    nextPregameStepTime = millis() + step_length;
     pregameStep++;
+    step_changed_this_frame = true;
   }
 
   //check if the settings buttons are being held
@@ -1032,9 +1066,6 @@ void displayPregame() {
 
   //blank the board
   resetMatrix();
-
-  
-  
 
   //show the characters coming in with arrows
   int trackPos = (NUM_COLS / 2) - pregameStep;
@@ -1084,6 +1115,7 @@ void displayPregame() {
 
   //blink the game
   if (pregameStep > NUM_COLS / 2) {
+    can_play_shift_sound = true;
     if (pregameStep % 4 < 2) {
       displayGame();
     }
@@ -1097,10 +1129,23 @@ void displayPregame() {
   }
 
   //after a bit, go to the game
-  if (pregameStep == NUM_COLS / 2 + 20) {
+  int last_step = NUM_COLS / 2 + 20;
+  if (pregameStep == last_step) {
     Serial.println("go to game");
     gameState = STATE_GAME;
   }
+
+  //playing the ready-set-go sounds
+  if (use_wav_trigger && step_changed_this_frame){
+    int sound_time = 800; //how much spacing we want in millis
+    int sound_steps = sound_time/step_length + 1;
+
+    int steps_from_end = last_step - pregameStep;
+    if (steps_from_end == sound_steps*3)  wTrig.trackPlayPoly(wav_countdown_a);
+    if (steps_from_end == sound_steps*2)  wTrig.trackPlayPoly(wav_countdown_a);
+    if (steps_from_end == sound_steps)  wTrig.trackPlayPoly(wav_countdown_b);
+  }
+  
 
 }
 
