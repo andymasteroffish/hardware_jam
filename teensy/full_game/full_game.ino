@@ -93,10 +93,6 @@ struct Player {
 
   int dist_traveled;
 
-  //death animation
-//  boolean doingDeathAnim;
-//  int deathAnimStep;
-//  int nextDeathAnimStepTime;
 };
 
 //buttons
@@ -109,13 +105,6 @@ struct Button {
   ColorHolder col;
   int led_id;
 };
-
-//color
-//struct Color {
-//  int r;
-//  int g;
-//  int b;
-//};
 
 /////////
 
@@ -1236,7 +1225,7 @@ void displaySettings(){
       pixel[obstacles[3].x][y].set(100,0,100);
     }
   }
-  buttons[1].col.set(&reverse_col);
+  buttons[3].col.set(&reverse_col);
 
   //4 is exit (drawing a check mark)
   int check_x = obstacles[4].x;
@@ -1313,12 +1302,6 @@ void setLEDs() {
         if (y==1) this_x = NUM_COLS - 1 - x - 1;  //need to shift this one over by 1
         leds[y].setPixelColor(this_x, pixel[x][y].get_uint_dotstar(global_brightness));
 
-//        if (y == 0) pix0.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
-//        if (y == 1) pix1.setPixelColor(NUM_COLS - 1 - x - 1, pixel[x][y].get_uint_dotstar(global_brightness));
-//        if (y == 2) pix2.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
-//        if (y == 3) pix3.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
-//        if (y == 4) pix4.setPixelColor(NUM_COLS - 1 - x , pixel[x][y].get_uint_dotstar(global_brightness));
-
         anythingChanged = true;
       }
     }
@@ -1329,18 +1312,6 @@ void setLEDs() {
     for (int y = 0; y < NUM_ROWS; y++) {
       leds[y].show();
     }
-//    pix0.show();
-//    pix1.show();
-//    pix2.show();
-//    pix3.show();
-//    pix4.show();
-
-    //  //store the current grid for comparison
-//    for (int y = 0; y < NUM_ROWS; y++) {
-//      for (int x = 0; x < NUM_COLS; x++) {
-//        last_sent_grid[x][y] = pixel[x][y];
-//      }
-//    }
   }
 
   //update the button colors
@@ -1357,19 +1328,6 @@ void setLEDs() {
   }
 }
 
-/*
-void debugDisplay(int x, int y, char col) {
-  String line = String(x) + "," + String(y) + "," + pixel[x][y] + "\n";
-  debug_display_buffer += line;
-  num_queued_debug_display++;
-
-  if (num_queued_debug_display == 8) {
-    sendDebugDisplayMessage();
-  }
-
-  //Serial.print(line);
-}
-*/
 
 void sendDebugDisplayMessage() {
   //send it
