@@ -192,6 +192,8 @@ int settings_timer_to_trigger = 150;
 int global_brightness_setting = 5;    //this is an int value that gets cycled in settings mode
 float global_brightness =  1.0f;
 
+int global_volume_setting = 4;
+
 //Neopixel lights in the buttons
 
 Adafruit_NeoPixel button_pixels = Adafruit_NeoPixel(NUM_BUTTONS, NEO_PIXEL_PIN, NEO_GRB + NEO_KHZ800);
@@ -1227,7 +1229,14 @@ void displaySettings(){
   printWord(player_num_text, &shifter_col, obstacles[2].x-2);
   buttons[2].col.set(&shifter_col);
 
-  //3 is start speed
+  //3 is volume
+  int volume_bar_height = global_volume_setting;
+  for (int y = 0; y < NUM_ROWS; y++) {
+    if (NUM_ROWS-y <= volume_bar_height){
+      pixel[obstacles[3].x][y].set(100,0,100);
+    }
+  }
+  buttons[1].col.set(&reverse_col);
 
   //4 is exit (drawing a check mark)
   int check_x = obstacles[4].x;
@@ -1251,10 +1260,6 @@ void button_pressed_settings(int id) {
     if (global_brightness_setting == 3)   global_brightness = 0.5;
     if (global_brightness_setting == 4)   global_brightness = 0.7;
     if (global_brightness_setting == 5)   global_brightness = 1.0;
-//    global_brightness += 0.2;
-//    if (global_brightness > 1.1){
-//      global_brightness = 0.2;
-//    }
   }
 
   //2 is num players
@@ -1265,7 +1270,19 @@ void button_pressed_settings(int id) {
     }
   }
 
-  //3 is start speed
+  //3 is volume
+  if (id==3){
+    global_volume_setting++;
+    if (global_volume_setting >= 6){
+      global_volume_setting = 0;
+    }
+    if (global_volume_setting == 0)   wTrig.masterGain(-70);  //off 
+    if (global_volume_setting == 1)   wTrig.masterGain(-50); 
+    if (global_volume_setting == 2)   wTrig.masterGain(-30); 
+    if (global_volume_setting == 3)   wTrig.masterGain(-10); 
+    if (global_volume_setting == 4)   wTrig.masterGain(0); //default
+    if (global_volume_setting == 5)   wTrig.masterGain(4);  //max 
+  }
 
   //4 is exit
   if (id==4){
