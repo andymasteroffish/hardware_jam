@@ -21,10 +21,10 @@ void setup() {
     wTrig.masterGain(0);  //set gain to default
 
     
-    wTrig.trackGain(wav_shift, -15);
+    wTrig.trackGain(wav_shift, -10);
     wTrig.trackGain(wav_accelerate, -6);
-    wTrig.trackGain(wav_countdown_a, -20);
-    wTrig.trackGain(wav_countdown_b, -10);
+    wTrig.trackGain(wav_countdown_a, -5);
+    wTrig.trackGain(wav_countdown_b, -5);
 
     /* some useful commands for wav trigger:
      *  wTrig.stopAllTracks(); //stops all tracks
@@ -594,7 +594,7 @@ void displayGame() {
 
 void displayIntro() {
   int mod = (millis() / 400) % NUM_COLS;
-  String abc = "--sar01";
+  String abc = "---ar01";
   //Serial.println("mod=" + mod);
 
   //flashing
@@ -1002,17 +1002,19 @@ void button_pressed_settings(int id) {
   }
 
   //3 is volume
-  if (id==3){
+  if (id==3 && use_wav_trigger){
     global_volume_setting++;
     if (global_volume_setting >= 6){
       global_volume_setting = 0;
     }
     if (global_volume_setting == 0)   wTrig.masterGain(-70);  //off 
-    if (global_volume_setting == 1)   wTrig.masterGain(-50); 
+    if (global_volume_setting == 1)   wTrig.masterGain(-40); 
     if (global_volume_setting == 2)   wTrig.masterGain(-30); 
     if (global_volume_setting == 3)   wTrig.masterGain(-10); 
     if (global_volume_setting == 4)   wTrig.masterGain(0); //default
     if (global_volume_setting == 5)   wTrig.masterGain(4);  //max 
+
+    wTrig.trackPlayPoly(wav_start);
   }
 
   //4 is exit
